@@ -125,7 +125,7 @@ html,body {
     font-family: 'Montserrat', sans-serif;
     color:aliceblue;
     max-width: inherit;
-    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 .chatMessagesArea {
