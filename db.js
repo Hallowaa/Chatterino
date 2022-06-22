@@ -4,6 +4,7 @@ import { Message } from "./message.js";
 import { User } from "./user.js";
 import * as dbu from './db_utils.js';
 import * as dbp from './db_parsing.js'
+import 'dotenv/config';
 
 const uri = process.env.MONGODB_URI;
 const dbName = "Chatterino";

@@ -61,23 +61,24 @@
                 const sidebar = document.getElementById("sidebarElements");
                 const groupIDs = userData.groupIDs;
                 socket.emit("Request group names", userData.groupIDs);
-                socket.on("Respond group names", (groupNames) => {
-                    groupNames.foreach(groupName => {
+                socket.on("Respond group names", (groupTuples) => {
+                    groupTuples.forEach(groupTuple => {
                         let groupEntry = newElement("button", "sidebarElement", "sidebarElement");
-                        groupEntry.innerText = groupID;
+                        groupEntry.innerText = groupTuple.groupName;
                         groupEntry.onclick = function() {
-                        if(contains(socket.userData.groupIDs, groupID)) {
-                            socket.emit("Request join group", groupID, socket.currentGroupID);
+                            if(contains(socket.userData.groupIDs, groupTuple.groupID)) {
+                                socket.emit("Request join group", groupTuple.groupID, socket.currentGroupID);
+                            }
                         }
-                    }
-                    sidebar.appendChild(groupEntry);
-                    })
-                })
+                        sidebar.appendChild(groupEntry);
+                    });
+                });
                 socket.emit("Request join group", groupIDs[0], null);
             });
 
             
 
+            
             function addMessage(messageData, chatMessagesArea) {
                 /*
                 * messageEntry
@@ -146,7 +147,7 @@
     <body>
         <div class="main">
             <div class="sidebar" id="sidebar">
-                <div id="sidebarElements">
+                <div id="sidebarElements" class="sidebarElements">
                 </div>
                 <div class="sideBottomBar">
                     <button class="sideBottomBarElement">new group</button>

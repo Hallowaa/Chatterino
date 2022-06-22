@@ -7,7 +7,7 @@ import * as dbu from './db_utils.js';
 import * as dbp from './db_parsing.js'
 import { fileURLToPath } from "url";
 import { Group } from "./group.js";
-import { ObjectId } from "mongodb";
+import 'dotenv/config';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,7 +43,7 @@ async function main() {
         });
 
         socket.on("Request group names", (groupIDs) => {
-            
+            requestGroupNames(server, socket, groupIDs);
         })
     });
 
@@ -63,13 +63,17 @@ app.get("/mainchat", (req, res) => {
 });
 
 async function requestGroupNames(server, socket, groupIDs) {
-    let groupNames = [];
+    let groupTuples = [];
+    
+    for await (const groupID of groupIDs) {
+        let groupTuple = {}
+        let group = await dbp.getGroupByID(db.db, groupID);
+        groupTuple.groupName = group.name;
+        groupTuple.groupID = groupID;
+        groupTuples.push(groupTuple);
+    }
 
-    groupIDs.foreach(groupID => {
-        groupNames.push(await dbp.getGroupByID(groupID).name);
-    })
-
-    server.to(socket.id).emit("Respond group names", groupNames);
+    server.to(socket.id).emit("Respond group names", groupTuples);
 }
 
 function notifyMessageAddedInGroup(server, groupID, message) {
