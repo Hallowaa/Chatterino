@@ -109,6 +109,7 @@
             const chatInputField = document.getElementById("chatInputField");
             chatInputField.addEventListener("keydown", function (e) {
                 if (e.key === "Enter") {
+                    e.preventDefault();
                     if(chatInputField.value.length > 0) {
                         message = new function() {
                             this.user = socket.userData;

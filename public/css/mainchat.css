@@ -126,6 +126,11 @@ html,body {
     color:aliceblue;
 }
 
+.chatMessagesArea {
+    max-height: 100%;
+    overflow-y: auto;
+}
+
 .sideBottomBarElement:hover {
     background-color: #242427;
 }
