@@ -124,6 +124,7 @@ html,body {
 .messageTextArea {
     font-family: 'Montserrat', sans-serif;
     color:aliceblue;
+    overflow-wrap: break-word;
 }
 
 .chatMessagesArea {

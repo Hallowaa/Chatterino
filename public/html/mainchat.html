@@ -70,31 +70,39 @@
                 socket.emit("joinGroup", groupIDs[0], null);
             });
 
+            function newElement(elementType, elementClass, elementId) {
+                let element = document.createElement(elementType);
+                element.className = elementClass;
+                element.id = elementId;
+                return element;
+            }
+
             function addMessage(messageData, chatMessagesArea) {
+                /*
+                * messageEntry
+                *   - messageUserArea
+                *       - messageUserAreaText
+                *   - messageTextArea
+                */
+
+                const messageTextArea = newElement("div", "messageTextArea", "messageTextArea");
+                messageTextArea.textContent = messageData.content;
+
                 if(socket.lastSeenMessage == null || messageData.user != socket.lastSeenMessage.user) {
-                    let messageEntry = document.createElement("div");
-                    messageEntry.className = "message";
-                    messageEntry.id = "message";
-                    const messageUserArea = document.createElement("div");
-                    messageUserArea.className = "messageUserArea";
-                    messageUserArea.id = "messageUserArea";
-                    messageEntry.appendChild(messageUserArea);
-                    const messageUserAreaText = document.createElement("a");
-                    messageUserAreaText.className = "messageUserAreaText";
-                    messageUserAreaText.id = "messageUserAreaText";
-                    messageUserArea.appendChild(messageUserAreaText);
+                    let messageEntry = newElement("div", "message", "message");
+                    const messageUserArea = newElement("div", "messageUserArea", "messageUserArea");
+                    const messageUserAreaText = newElement("a", "messageUserAreaText", "messageUserAreaText");
+                    
                     messageUserAreaText.textContent = messageData.user.username;
-                    const messageTextArea = document.createElement("div");
-                    messageTextArea.className = "messageTextArea";
-                    messageTextArea.id = "messageTextArea";
-                    messageTextArea.textContent = messageData.content;
+                    
+                    messageUserArea.appendChild(messageUserAreaText);
+                    messageEntry.appendChild(messageUserArea);
                     messageEntry.appendChild(messageTextArea);
                     chatMessagesArea.appendChild(messageEntry);
+
+                    console.log(messageData.user);
+                    console.log(socket.lastSeenMessage.user);
                 } else {
-                    const messageTextArea = document.createElement("div");
-                    messageTextArea.className = "messageTextArea";
-                    messageTextArea.id = "messageTextArea";
-                    messageTextArea.textContent = messageData.content;
                     chatMessagesArea.lastChild.appendChild(messageTextArea);
                 }
                 
