@@ -15,5 +15,8 @@
   },
   "devDependencies": {
     "@types/node": "^17.0.24"
+  },
+  "scripts": {
+    "start": "node index.js"
   }
 }
