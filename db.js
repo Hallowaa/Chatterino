@@ -89,6 +89,10 @@ export function socketJoinGroup(socketID, newGroupID, oldGroupID) {
     socketsInGroups.set(newGroupID.toString(), socketsInNew);
 }
 
+export function socketDisconnected(socketID) {
+    
+}
+
 export function getSocketIDsInGroup(groupID) {
     return socketsInGroups.get(groupID);
 }

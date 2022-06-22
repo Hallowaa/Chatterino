@@ -89,6 +89,7 @@
                     messageEntry.appendChild(messageTextArea);
                     messageTextArea.textContent = messageData.content;
                     chatMessagesArea.appendChild(messageEntry);
+                    window.scrollTo(0, chatMessagesArea.scrollHeight);
             }
 
             socket.on("joinedGroup", (groupData) => {
