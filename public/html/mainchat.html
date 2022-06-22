@@ -77,7 +77,7 @@
                 messageTextArea.id = "messageTextArea";
                 messageTextArea.textContent = messageData.content;
 
-                if(messageData.user != socket.lastSeenMessage.user) {
+                if(socket.lastSeenMessage == null || messageData.user != socket.lastSeenMessage.user) {
                     messageEntry.className = "message";
                     messageEntry.id = "message";
                     const messageUserArea = document.createElement("div");
