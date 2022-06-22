@@ -41,6 +41,10 @@ async function main() {
         socket.on("Send new message", (groupID, messageData) => {
             sendMessage(server, groupID, messageData);
         });
+
+        socket.on("Request group names", (groupIDs) => {
+            
+        })
     });
 
     httpServer.listen(process.env.PORT);
@@ -57,6 +61,16 @@ app.get("/", (req, res) => {
 app.get("/mainchat", (req, res) => {
     res.sendFile(path.resolve(__dirname, "public/html/", "mainchat.html"));
 });
+
+async function requestGroupNames(server, socket, groupIDs) {
+    let groupNames = [];
+
+    groupIDs.foreach(groupID => {
+        groupNames.push(await dbp.getGroupByID(groupID).name);
+    })
+
+    server.to(socket.id).emit("Respond group names", groupNames);
+}
 
 function notifyMessageAddedInGroup(server, groupID, message) {
     const socketIDs = db.getSocketIDsInGroup(groupID);

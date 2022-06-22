@@ -46,6 +46,13 @@
             return result;
         }
 
+        function newElement(elementType, elementClass, elementId) {
+            let element = document.createElement(elementType);
+            element.className = elementClass;
+            element.id = elementId;
+            return element;
+        }
+
         $(document).ready(function() {
             socket.emit("Request user data", getCookie("token"));
 
@@ -53,27 +60,23 @@
                 socket.userData = userData;
                 const sidebar = document.getElementById("sidebarElements");
                 const groupIDs = userData.groupIDs;
-                groupIDs.forEach(groupID => {
-                    let groupEntry = document.createElement("button");
-                    groupEntry.className = "sidebarElement";
-                    groupEntry.id = "sidebarElement";
-                    groupEntry.innerText = groupID;
-                    groupEntry.onclick = function() {
+                socket.emit("Request group names", userData.groupIDs);
+                socket.on("Respond group names", (groupNames) => {
+                    groupNames.foreach(groupName => {
+                        let groupEntry = newElement("button", "sidebarElement", "sidebarElement");
+                        groupEntry.innerText = groupID;
+                        groupEntry.onclick = function() {
                         if(contains(socket.userData.groupIDs, groupID)) {
                             socket.emit("Request join group", groupID, socket.currentGroupID);
                         }
                     }
                     sidebar.appendChild(groupEntry);
-                });
+                    })
+                })
                 socket.emit("Request join group", groupIDs[0], null);
             });
 
-            function newElement(elementType, elementClass, elementId) {
-                let element = document.createElement(elementType);
-                element.className = elementClass;
-                element.id = elementId;
-                return element;
-            }
+            
 
             function addMessage(messageData, chatMessagesArea) {
                 /*
