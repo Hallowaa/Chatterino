@@ -88,7 +88,7 @@
                 const messageTextArea = newElement("div", "messageTextArea", "messageTextArea");
                 messageTextArea.textContent = messageData.content;
 
-                if(socket.lastSeenMessage == null || messageData.user != socket.lastSeenMessage.user) {
+                if(socket.lastSeenMessage == null || messageData.user._id != socket.lastSeenMessage.user._id) {
                     let messageEntry = newElement("div", "message", "message");
                     const messageUserArea = newElement("div", "messageUserArea", "messageUserArea");
                     const messageUserAreaText = newElement("a", "messageUserAreaText", "messageUserAreaText");
