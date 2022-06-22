@@ -126,6 +126,7 @@ html,body {
     color:aliceblue;
     max-width: inherit;
     word-wrap: break-word;
+    word-break: break-all;
 }
 
 .chatMessagesArea {
