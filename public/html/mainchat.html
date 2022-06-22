@@ -47,14 +47,12 @@
         }
 
         $(document).ready(function() {
-            console.log("Requesting user data");
-            socket.emit("getUserData", getCookie("token"));
+            socket.emit("Request user data", getCookie("token"));
 
-            socket.on("sendUserData", (userData) => {
-                console.log("User data received");
+            socket.on("Respond user data", (userData) => {
                 socket.userData = userData;
-                const groupIDs = userData.groupIDs;
                 const sidebar = document.getElementById("sidebarElements");
+                const groupIDs = userData.groupIDs;
                 groupIDs.forEach(groupID => {
                     let groupEntry = document.createElement("button");
                     groupEntry.className = "sidebarElement";
@@ -62,12 +60,12 @@
                     groupEntry.innerText = groupID;
                     groupEntry.onclick = function() {
                         if(contains(socket.userData.groupIDs, groupID)) {
-                            socket.emit("joinGroup", groupID, socket.currentGroupID);
+                            socket.emit("Request join group", groupID, socket.currentGroupID);
                         }
                     }
                     sidebar.appendChild(groupEntry);
                 });
-                socket.emit("joinGroup", groupIDs[0], null);
+                socket.emit("Request join group", groupIDs[0], null);
             });
 
             function newElement(elementType, elementClass, elementId) {
@@ -108,8 +106,7 @@
                 chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
             }
 
-            socket.on("joinedGroup", (groupData) => {
-                console.log(`joined ${groupData}`);
+            socket.on("Respond join group", (groupData) => {
                 socket.currentGroupID = groupData._id;
                 const chatMessagesArea = document.getElementById("chatMessagesArea");
                 chatMessagesArea.innerHTML = '';
@@ -118,16 +115,16 @@
                 });
             });
 
-            socket.on("getNewMessage", (messageData) => {
+            socket.on("Get new Message", (messageData) => {
                 const chatMessagesArea = document.getElementById("chatMessagesArea");
                 addMessage(messageData, chatMessagesArea);
             });
 
             const chatInputField = document.getElementById("chatInputField");
             chatInputField.addEventListener("keydown", function (e) {
-                if (e.key === "Enter") {
+                if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
-                    if(chatInputField.value.length > 0) {
+                    if(chatInputField.value.trim().length > 0) {
                         message = new function() {
                             this.user = socket.userData;
                             this.dateCreated = Date.now;
@@ -135,11 +132,10 @@
                             this.deleted = false;
                         }
                         chatInputField.value = "";
-                        console.log("sending in group: " + socket.currentGroupID);
-                        socket.emit("sendMessage", socket.currentGroupID, message);
+                        socket.emit("Send new message", socket.currentGroupID, message);
                     }
                 }
-            })
+            });
         });
 
     </script>

@@ -24,21 +24,21 @@ async function main() {
             login(server, socket, username, password);
         });
     
-        socket.on("getUserData", (token) => {
+        socket.on("Request user data", (token) => {
             sendUserData(server, socket, token);
         });
 
-        socket.on("createGroup", (name, dateCreated, creatorID, id) => {
+        socket.on("Request create group", (name, dateCreated, creatorID, id) => {
             let ID = id == db.mainChatID? dbu.newObjectID() : id;
             const group = new Group(ID, name, [creatorID], dateCreated, creatorID, []);
             db.addGroup(group);
         });
 
-        socket.on("joinGroup", (newGroupID, oldGroupID) => {
+        socket.on("Request join group", (newGroupID, oldGroupID) => {
             joinGroup(server, socket, newGroupID, oldGroupID?oldGroupID:null);
         });
 
-        socket.on("sendMessage", (groupID, messageData) => {
+        socket.on("Send new message", (groupID, messageData) => {
             sendMessage(server, groupID, messageData);
         });
     });
@@ -61,7 +61,7 @@ app.get("/mainchat", (req, res) => {
 function notifyMessageAddedInGroup(server, groupID, message) {
     const socketIDs = db.getSocketIDsInGroup(groupID);
     for(const socketID of socketIDs) {
-        server.to(socketID).emit("getNewMessage", message);
+        server.to(socketID).emit("Get new message", message);
     }
 }
 
@@ -82,7 +82,7 @@ async function joinGroup(server, socket, newGroupID, oldGroupID) {
         const groupData = db.groupDocumentToObject(group);
         if(groupData) {
             db.socketJoinGroup(socket.id, newGroupID, oldGroupID);
-            server.to(socket.id).emit("joinedGroup", groupData);
+            server.to(socket.id).emit("Respond join group", groupData);
         }
     } catch (error) {
         console.error(error);
@@ -94,7 +94,7 @@ async function sendUserData(server, socket, token) {
     try {
         let user = await dbp.getUserByToken(db.db, token);
         if (user != null) {
-            server.to(socket.id).emit("sendUserData", user);
+            server.to(socket.id).emit("Respond user data", user);
         }
     } catch (error) {
         console.error(error);
@@ -105,7 +105,7 @@ async function login(server, socket, username, password) {
     try {
         let user = await dbp.getUserByUsernamePassword(db.db, username, password);
         if (user != null) {
-            server.to(socket.id).emit("successfulLogin", user.token);
+            server.to(socket.id).emit("Login success", user.token);
         }
     } catch (error) {
         console.error(error);
