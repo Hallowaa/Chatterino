@@ -20,7 +20,7 @@ async function main() {
     await db.connectDb();
 
     server.on("connection", (socket) => {
-        socket.on("login", (username, password) => {
+        socket.on("Login", (username, password) => {
             login(server, socket, username, password);
         });
     

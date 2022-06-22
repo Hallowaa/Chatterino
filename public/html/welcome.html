@@ -25,7 +25,7 @@
     <script type="text/javascript">
         $(document).ready(function() {
             $("#loginButton").click(function() {
-                socket.emit("login", $("#loginName").val(), $("#loginPassword").val());
+                socket.emit("Login", $("#loginName").val(), $("#loginPassword").val());
             });
         });
     </script>
@@ -33,7 +33,7 @@
 
     <!-- GOING TO THE MAIN PAGE WHEN LOGIN SUCCESSFUL -->
     <script type="text/javascript">
-        socket.on("successfulLogin", (token) => {
+        socket.on("Login success", (token) => {
             document.cookie = "token=" + token;
             history.pushState("", "", "/mainchat");
             window.location.reload();
