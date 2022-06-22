@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Chatterino</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link type="text/css" rel="stylesheet" href="css/welcome.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200&display=swap" rel="stylesheet">
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+            let socket = io();
+
+            // Reload when pressing back or forward buttons on the browser
+            $(window).on('popstate', function() {
+                location.reload(true);
+            });
+        </script>
+    </head>
+
+    <!-- SENDING THE LOGIN INFORMATION TO THE SERVER -->
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#loginButton").click(function() {
+                socket.emit("login", $("#loginName").val(), $("#loginPassword").val());
+            });
+        });
+    </script>
+    <!---->
+
+    <!-- GOING TO THE MAIN PAGE WHEN LOGIN SUCCESSFUL -->
+    <script type="text/javascript">
+        socket.on("successfulLogin", (token) => {
+            document.cookie = "token=" + token;
+            history.pushState("", "", "/mainchat");
+            window.location.reload();
+        });
+    </script>
+    <!---->
+
+    <body>
+        <div class="main">
+            <div class="loginPrompt">
+                <div class="welcomeDiv">
+                    <h1 class="welcomeText">
+                        Welcome to Chatterino!
+                    </h1>
+                </div>
+                <br>
+                <h2 class="welcomeText">
+                    Log in
+                </h2>
+                <form>
+                    <p>
+                        <label for="loginName" class="loginDataText">Username</label>
+                        <input type="text" id="loginName" name="loginName" class="loginDataTextField" spellcheck="false">
+                    </p>
+                    <br>
+                    <p>
+                        <label for="loginPassword" class="loginDataText">Password</label>
+                        <input type="password" id="loginPassword" name="loginPassword" class="loginDataTextField" spellcheck="false">    
+                    </p>
+                </form>
+                <button id="loginButton" class="loginButton">Go!</button>   
+            </div>
+        </div>
+    </body>
+</html>

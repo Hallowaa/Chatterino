@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link type="text/css" rel="stylesheet" href="css/mainchat.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200&display=swap" rel="stylesheet">
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+            let socket = io();
+            // Reload when pressing back or forward buttons on the browser
+            $(window).on('popstate', function() {
+                location.reload(true);
+            });
+        </script>
+    </head>
+
+    <script type="text/javascript">
+
+        function getCookie(name) {
+            var cookie = document.cookie;
+            var result;
+            cookie.split(' ').forEach(element => {
+                var entry = element.split('=');
+                
+                if(entry[0] == name) {
+                    result = entry[1];
+                }
+            });
+
+            if(result != null) return result;
+        }
+
+        function contains(array, toSearch) {
+            let result = false;
+            array.forEach(element => {
+                if(element == toSearch) result = true;
+            });
+            return result;
+        }
+
+        $(document).ready(function() {
+            console.log("Requesting user data");
+            socket.emit("getUserData", getCookie("token"));
+
+            socket.on("sendUserData", (userData) => {
+                console.log("User data received");
+                socket.userData = userData;
+                const groupIDs = userData.groupIDs;
+                const sidebar = document.getElementById("sidebarElements");
+                groupIDs.forEach(groupID => {
+                    let groupEntry = document.createElement("button");
+                    groupEntry.className = "sidebarElement";
+                    groupEntry.id = "sidebarElement";
+                    groupEntry.innerText = groupID;
+                    groupEntry.onclick = function() {
+                        if(contains(socket.userData.groupIDs, groupID)) {
+                            socket.emit("joinGroup", groupID, socket.currentGroupID);
+                        }
+                    }
+                    sidebar.appendChild(groupEntry);
+                });
+                socket.emit("joinGroup", groupIDs[0], null);
+            });
+
+            function addMessage(messageData, chatMessagesArea) {
+                let messageEntry = document.createElement("div");
+                    messageEntry.className = "message";
+                    messageEntry.id = "message";
+                    const messageUserArea = document.createElement("div");
+                    messageUserArea.className = "messageUserArea";
+                    messageUserArea.id = "messageUserArea";
+                    messageEntry.appendChild(messageUserArea);
+                    const messageUserAreaText = document.createElement("a");
+                    messageUserAreaText.className = "messageUserAreaText";
+                    messageUserAreaText.id = "messageUserAreaText";
+                    messageUserArea.appendChild(messageUserAreaText);
+                    messageUserAreaText.textContent = messageData.user.username;
+                    const messageTextArea = document.createElement("div");
+                    messageTextArea.className = "messageTextArea";
+                    messageTextArea.id = "messageTextArea";
+                    messageEntry.appendChild(messageTextArea);
+                    messageTextArea.textContent = messageData.content;
+                    chatMessagesArea.appendChild(messageEntry);
+            }
+
+            socket.on("joinedGroup", (groupData) => {
+                console.log(`joined ${groupData}`);
+                socket.currentGroupID = groupData._id;
+                const chatMessagesArea = document.getElementById("chatMessagesArea");
+                chatMessagesArea.innerHTML = '';
+                groupData.messages.forEach(message => {
+                    addMessage(message, chatMessagesArea);
+                });
+            });
+
+            socket.on("getNewMessage", (messageData) => {
+                const chatMessagesArea = document.getElementById("chatMessagesArea");
+                addMessage(messageData, chatMessagesArea);
+            });
+
+            const chatInputField = document.getElementById("chatInputField");
+            chatInputField.addEventListener("keydown", function (e) {
+                if (e.key === "Enter") {
+                    if(chatInputField.value.length > 0) {
+                        message = new function() {
+                            this.user = socket.userData;
+                            this.dateCreated = Date.now;
+                            this.content = chatInputField.value;
+                            this.deleted = false;
+                        }
+                        chatInputField.value = "";
+                        console.log("sending in group: " + socket.currentGroupID);
+                        socket.emit("sendMessage", socket.currentGroupID, message);
+                    }
+                }
+            })
+        });
+
+    </script>
+
+    <body>
+        <div class="main">
+            <div class="sidebar" id="sidebar">
+                <div id="sidebarElements">
+                </div>
+                <div class="sideBottomBar">
+                    <button class="sideBottomBarElement">new group</button>
+                    <button class="sideBottomBarElement">add friend</button>
+                </div>
+            </div>
+            <div class="chat" id="chat">
+                <div class="chatMessagesArea" id="chatMessagesArea"></div>
+                <textarea class="chatInputField" id="chatInputField"></textarea>
+            </div>
+        </div>
+    </body>
+</html>

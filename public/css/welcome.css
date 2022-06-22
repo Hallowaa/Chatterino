@@ -1,0 +1,91 @@
+html,body {
+    margin:0px;
+    height:100%;
+}
+
+.main {
+    background-color: #1b1b1b;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23393939' fill-opacity='0.69'%3E%3Cpath d='M0 38.59l2.83-2.83 1.41 1.41L1.41 40H0v-1.41zM0 1.4l2.83 2.83 1.41-1.41L1.41 0H0v1.41zM38.59 40l-2.83-2.83 1.41-1.41L40 38.59V40h-1.41zM40 1.41l-2.83 2.83-1.41-1.41L38.59 0H40v1.41zM20 18.6l2.83-2.83 1.41 1.41L21.41 20l2.83 2.83-1.41 1.41L20 21.41l-2.83 2.83-1.41-1.41L18.59 20l-2.83-2.83 1.41-1.41L20 18.59z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    height:100%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}
+
+.welcomeDiv {
+    width: fit-content;
+    padding-left: 3vmin;
+    padding-right: 3vmin;
+    border-radius: 2vmin;
+    background-color: rgba(50, 50, 50, 0.5);
+    box-shadow: 0vmin 0vmin 1vmin black;
+    text-align: center;
+}
+
+.loginPrompt {
+    width: fit-content;
+    background-color: #111111;
+    box-shadow: 0vmin 0vmin 2vmin black;
+    padding: 4vmin 4vmin;
+    border-radius: 3vmin;
+    display: flex;
+    flex-direction: column;
+}
+
+.welcomeText {
+    color:aliceblue;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.logInText {
+    color:aliceblue;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.loginDataText {
+    color:aliceblue;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 2vmin;
+}
+
+.loginDataTextField {
+    color:aliceblue;
+    font-family: 'Montserrat', sans-serif;
+    background-color: rgb(50, 50, 50);
+    box-shadow: 0vmin 0vmin 0.5vmin rgb(20, 22, 40);
+    border: none;
+    border-radius: 0.4vmin;
+    margin-left: 1vmin;
+    padding: 0.5vmin 1vmin;
+}
+
+.loginButton {
+    background-color: rgba(50, 50, 50, 0.7);
+    color:aliceblue;
+    padding: 1vmin 1vmin;
+    font-family: 'Montserrat', sans-serif;
+    margin-top: 3vmin;
+    border-radius: 1vmin;
+    width: 10vmin;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition-duration: 0.1s;
+    font-size: 2vmin;
+}
+
+.loginButton:hover {
+    color:black;
+    background-color: rgb(223, 223, 223);
+}
+
+.loginButton:active {
+    transform: scale(0.9);
+    background-color: rgb(147, 205, 255);
+}
+
+form  { display: table;      }
+p     { display: table-row;  }
+label { display: table-cell; }
+input { display: table-cell; }
