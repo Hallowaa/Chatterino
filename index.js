@@ -43,7 +43,7 @@ async function main() {
         });
     });
 
-    httpServer.listen(3000);
+    httpServer.listen(process.env.PORT);
 }
 
 main();
