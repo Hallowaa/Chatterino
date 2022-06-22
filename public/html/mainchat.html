@@ -115,7 +115,7 @@
                 });
             });
 
-            socket.on("Get new Message", (messageData) => {
+            socket.on("Get new message", (messageData) => {
                 const chatMessagesArea = document.getElementById("chatMessagesArea");
                 addMessage(messageData, chatMessagesArea);
             });
