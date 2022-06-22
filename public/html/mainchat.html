@@ -71,13 +71,8 @@
             });
 
             function addMessage(messageData, chatMessagesArea) {
-                let messageEntry = document.createElement("div");
-                const messageTextArea = document.createElement("div");
-                messageTextArea.className = "messageTextArea";
-                messageTextArea.id = "messageTextArea";
-                messageTextArea.textContent = messageData.content;
-
                 if(socket.lastSeenMessage == null || messageData.user != socket.lastSeenMessage.user) {
+                    let messageEntry = document.createElement("div");
                     messageEntry.className = "message";
                     messageEntry.id = "message";
                     const messageUserArea = document.createElement("div");
@@ -90,10 +85,20 @@
                     messageUserArea.appendChild(messageUserAreaText);
                     messageUserAreaText.textContent = messageData.user.username;
                     messageTextArea.textContent = messageData.content;
+                    const messageTextArea = document.createElement("div");
+                    messageTextArea.className = "messageTextArea";
+                    messageTextArea.id = "messageTextArea";
+                    messageTextArea.textContent = messageData.content;
+                    messageEntry.appendChild(messageTextArea);
+                    chatMessagesArea.appendChild(messageEntry);
+                } else {
+                    const messageTextArea = document.createElement("div");
+                    messageTextArea.className = "messageTextArea";
+                    messageTextArea.id = "messageTextArea";
+                    messageTextArea.textContent = messageData.content;
+                    chatMessagesArea.lastChild.appendChild(messageTextArea);
                 }
                 
-                messageEntry.appendChild(messageTextArea);
-                chatMessagesArea.appendChild(messageEntry);
                 socket.lastSeenMessage = messageData;
                 chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
             }
