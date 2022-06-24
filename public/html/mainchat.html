@@ -82,7 +82,7 @@
         function addGroup(group) {
             let groupEntry = newElement('button', 'sidebarElement', 'sidebarElement');
             groupEntry.textContent = group.properties.name;
-            groupEntry.onClick = function() {
+            groupEntry.onclick = function() {
                 socket.emit('Request group data', group.properties._id, socket.currentGroupID);
             }
             get('sidebarElements').append(groupEntry);
@@ -142,18 +142,91 @@
                     }
                 }
             });
+
+            const panels = [get('userSettingsPanel'), get('friendsPanel'), get('uiSettingsPanel')];
+
+            function hideAll(panels) {
+                panels.forEach(panel => {
+                    panel.style.display = 'none';
+                });
+            }
+
+            function hideAllExcept(panels, except) {
+                panels.forEach(panel => {
+                    if(panel != except) {
+                        panel.style.display = 'none';
+                    }
+                });
+            }
+
+            let lastOpened;
+            function showPanel(panel) {
+                panel.style.display = 'flex';
+                lastOpened = panel;
+            }
+
+            let settingsPanel = get('settingsPanel');
+            let settingsPanelButton = get('settingsPanelButton');
+            
+            settingsPanelButton.onclick = function(event) {
+                settingsPanel.style.display = 'flex';
+
+                // the default panel
+                lastOpened?lastOpened.style.display = 'flex':get('userSettingsPanel').style.display = 'flex';
+            }
+
+            window.onclick = function(event) {
+                if (event.target == settingsPanel) {
+                    hideAll(panels);
+                    settingsPanel.style.display = 'none';
+                }
+            }
+
+            get('settingsPanelTopBarUserSettings').onclick = function() {
+                hideAllExcept(panels, get('userSettingsPanel'));
+                showPanel(get('userSettingsPanel'));
+            }
+
+            get('settingsPanelTopBarFriends').onclick = function() {
+                hideAllExcept(panels, get('friendsPanel'));
+                showPanel(get('friendsPanel'));
+            }
+
+            get('settingsPanelTopBarUiSettings').onclick = function() {
+                hideAllExcept(panels, get('uiSettingsPanel'));
+                showPanel(get('uiSettingsPanel'));
+            }
         });
+
+        
 
     </script>
 
     <body>
+        <div class="settingsPanel" id="settingsPanel">
+            <div class="settingsPanelContent" id="settingsPanelContent">
+                <div class="settingsPanelTopBar" id="settingsPanelTopBar">
+                    <button class="settingsPanelTopBarEntry" id="settingsPanelTopBarUserSettings">User Settings</button>
+                    <button class="settingsPanelTopBarEntry" id="settingsPanelTopBarFriends">Friends</button>
+                    <button class="settingsPanelTopBarEntry" id="settingsPanelTopBarUiSettings">UI Settings</button>
+                </div>
+                <div class="settingsPanelEntry" id="userSettingsPanel">
+                </div>
+                <div class="settingsPanelEntry" id="friendsPanel">
+                </div>
+                <div class="settingsPanelEntry" id="uiSettingsPanel">
+                </div>
+            </div>
+        </div>
         <div class="main">
             <div class="sidebar" id="sidebar">
-                <div  class="sidebarElements" id="sidebarElements">
+                <div class="sidebarElements" id="sidebarElements">
                 </div>
                 <div class="sideBottomBar">
-                    <button class="sideBottomBarElement">New group</button>
-                    <button class="sideBottomBarElement">Add friend</button>
+                    <button class="settingsPanelButton" id="settingsPanelButton">
+                        <img src="./images/menu_icon.png" height="80%" width="80%">
+                    </button>
+                    
                 </div>
             </div>
             <div class="chat" id="chat">
