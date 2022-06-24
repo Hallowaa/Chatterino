@@ -1,44 +1,30 @@
-export class User {
-    username;
-    icon;
-    bio;
-    _id;
-    token;
+import mongoose from "mongoose";
 
-    // only IDs of groups are stored!
-    groupIDs;
-
-    constructor(username, icon, bio, _id, token, groupIDs) {
-        this.username = username;
-        this.icon = icon;
-        this.bio = bio;
-        this._id = _id;
-        this.token = token;
-        this.groupIDs = groupIDs;
+const UserSchema = new mongoose.Schema({
+    profile: {
+        username: { type: String, required: true },
+        bio: { type: String },
+        color: { type: String },
+        icon: { type: String, validate: {
+            validator: function(value) {
+                const urlPattern = /(http|https):\/\/(\w+:{0,1}\w*#)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%#!\-/]))?/;
+                const urlRegExp = new RegExp(urlPattern);
+                return value.match(urlRegExp);
+            },
+                message: props => `${props.value} is not a valid URL`    
+            }
+        }
+    },
+    properties: {
+        token: { type: String, index: true, required: true },
+        password: { type: String, required: true },
+        friends: [
+            { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+        ],
+        groups: [
+            { type: mongoose.Schema.Types.ObjectId, ref: 'Group' }
+        ]
     }
+}, { collection: 'Users'});
 
-    get username() {
-        return this.username;
-    }
-
-    get icon() {
-        return this.icon;
-    }
-
-    get bio() {
-        return this.bio;
-    }
-
-    get _id() {
-        return this._id;
-    }
-
-    get token() {
-        return this.token;
-    }
-
-    get groupIDs() {
-        return this.groupIDs;
-    }
-
-}
+export const User = mongoose.model('User', UserSchema);

@@ -1,220 +1,144 @@
-import { MongoClient, ObjectId } from "mongodb";
-import { Group } from "./group.js";
-import { Message } from "./message.js";
-import { User } from "./user.js";
-import * as dbu from './db_utils.js';
-import * as dbp from './db_parsing.js'
+import mongoose from "mongoose";
+import { User } from './user.js';
+import { Group } from './group.js';
+import { Message } from './message.js';
+import * as stringUtils from './string_utils.js';
+import { ObjectId } from "mongodb";
 import 'dotenv/config';
-
-const uri = process.env.MONGODB_URI;
-const dbName = "Chatterino";
-
-export const mongoClient = new MongoClient(uri);
-export const db = mongoClient.db(dbName);
-
-export const usersCollection = "Users";
-export const groupsCollection = "Groups";
-export const mainChatID = dbu.newObjectID("000000000000000000000000");
 export const socketsInGroups = new Map();
-export async function connectDb() {
-    try {
-        mongoClient.isConnected = false;
-        console.log(`Connecting Mongo client...`);
-        mongoClient.connect(() => {
-            console.log(`Mongo client has been connected`);
-            mongoClient.isConnected = true;
-            createDefaults();
-        });
-    } catch(err) {
-        console.error(err);
-        await mongoClient.close();
+const USER_TOKEN_LENGTH = 15;
+
+
+mongoose.connect(process.env.MONGODB_URI, {useUnifiedTopology: true}).then(
+    console.log('Connected to MongoDB!'),
+    generateDefaults()
+);
+
+const connection = mongoose.connection;
+connection.on('error', console.error.bind(console, 'connection error:'));
+
+
+/**
+ * Generates the default collections and an admin user.
+ * 
+ */
+export async function generateDefaults() {
+    let admin = await User.findOne({ 'profile.username': process.env.ADMIN_USERNAME, 'properties.password': process.env.ADMIN_PASSWORD});
+    if(!admin) {
+        await User.create({
+            'profile.username': process.env.ADMIN_USERNAME,
+            'properties.password': process.env.ADMIN_PASSWORD,
+            'properties.token': stringUtils.newToken(USER_TOKEN_LENGTH)}
+        );
+        console.log('Admin has been created');
     }
+    
+    let mainGroup = await Group.findOne({ '_id': new ObjectId('000000000000000000000000')});
+    if(!mainGroup) {
+        await Group.create({
+            '_id': new ObjectId('000000000000000000000000'),
+            'properties.name': 'Chatterino'
+        });
+        console.log('Main group has been created');
+    }   
+
+    admin = await User.findOne({ 'profile.username': process.env.ADMIN_USERNAME, 'properties.password': process.env.ADMIN_PASSWORD});
+    mainGroup = await Group.findOne({ '_id': new ObjectId('000000000000000000000000')});
+    await userJoinGroup(admin, mainGroup);
 }
 
-async function createDefaults() {
-    try {
-        let collectionsInDB = await dbp.getAllCollections(db);
-        let collectionsInDBNames = [];
-        collectionsInDB.forEach(collection => {
-            collectionsInDBNames.push(collection.name);
-        })
-        let expectedCollections = [usersCollection, groupsCollection];
+export async function getUser(query) {
+    return await User.findOne(query).populate('properties.groups');
+}
 
-        expectedCollections.forEach(element => {
-            if(!contains(collectionsInDBNames, element)) {
-                db.createCollection(element, (error, result) => {
-                    if(error) console.error(error);
-                });
+export async function getGroupShallow(query) {
+    return await Group.findOne(query).populate('content.messages').populate('properties.users');
+}
+
+export async function getGroupDeep(query) {
+    return await Group.findOne(query).populate({
+        path: 'content',
+        populate: {
+            path: 'messages',
+            populate: {
+                path: 'properties',
+                populate: 'creator'
             }
-        });
-    } catch(error) {
-        console.error(`Error when creating default collections: ${error}`);
-    }
-
-    try{
-        let found = await dbp.getGroupByID(db, mainChatID);
-        
-        if(!found) {
-            dbp.getAllFromCollection(db, usersCollection).then(users => {
-                addGroup(new Group(mainChatID, "Chatterino", [] , Date.now, null, []));
-                users.forEach(user => {
-                    connectUserAndGroup(user._id, mainChatID);
-                });
-            });
         }
-    } catch (error) {
-        console.error(`Error when creating default chat: ${error}`);
-    }
+    }).populate('properties.users');
 }
 
-export function socketJoinGroup(socketID, newGroupID, oldGroupID) {
-    let socketsInNew = socketsInGroups.get(newGroupID);
-    if(socketsInNew == null) {
-        socketsInNew = [];
-    }
-
-    let socketsInOld = socketsInGroups.get(oldGroupID);
-    if(socketsInOld == null) {
-        socketsInOld = [];
-    }
-
-    socketsInNew.push(socketID);
-    
-    if(oldGroupID) {
-        let index = usersInOld.indexOf(socketID);
-        if(index > -1) {
-            socketsInOld.splice(index, 1);
+export async function createMessage(messageData) {
+    let result = new Message({
+        content: {
+            text: messageData.content.text
+        },
+        properties: {
+            creator: new mongoose.Types.ObjectId(messageData.properties.creator._id),
+            dateCreated: messageData.properties.dateCreated,
+            deleted: messageData.properties.deleted,
+            edited: messageData.properties.edited
         }
-        socketsInGroups.set(oldGroupID.toString(), socketsInOld);
-    }
-    socketsInGroups.set(newGroupID.toString(), socketsInNew);
-}
+    });
 
-export function socketDisconnected(socketID) {
+    await result.save();
     
+    return await result.populate('properties.creator');;
 }
 
-export function getSocketIDsInGroup(groupID) {
-    return socketsInGroups.get(groupID);
+export async function newMessageInGroup(message, group) {
+    group.content.messages.push(message);
+    await group.save();
 }
 
-export function contains(array, toSearch) {
+export async function userJoinGroup(user, group) {
+    let filteredGroups = user.properties.groups.map(groupFromProps => groupFromProps.toString());
+    if(!contains(filteredGroups, group._id.toString())) {
+        user.properties.groups.push(group);
+        group.properties.users.push(user);
+        await user.save();
+        await group.save();
+    }
+}
+
+function contains(array, toSearch) {
     let result = false;
     array.forEach(element => {
-        if (element == toSearch) result = true;
+        if(element === toSearch) result = true;
     });
     return result;
 }
 
-export async function isConnected() {
-    return mongoClient.isConnected;
+/**
+ * Method used to keep track of what sockets to notify for what group when an event happens in that group.
+ * @param {String} socketID The ID of the socket with socket.id
+ * @param {String} groupID the ID of the group with group._id
+ */
+export function socketEnterGroupView(socketID, groupID) {
+    let sockets = socketsInGroups.get(groupID);
+    if(sockets == null) sockets = [];
+    sockets.push(socketID);
+    socketsInGroups.set(groupID.toString(), sockets);
 }
 
 /**
- * Returns a new Message object out of a message document.
- * @param {Document} message The message document.
- * @returns A new Message object.
+ * Method used to keep track of what sockets to notify for what group when an event happens in that group.
+ * @param {String} socketID The ID of the socket with socket.id
+ * @param {String} groupID the ID of the group with group._id
  */
-export function messageDocumentToObject(message) {
-    return new Message(message.user, message.dateCreated, message.content, message.deleted, message._id);
-}
+export function socketLeaveGroupView(socketID, groupID) {
+    let sockets = socketsInGroups.get(groupID);
 
-/**
- * Returns a new Group object out of a group document. It only has the IDs of the users, not the users themselves.
- * @param {Document} group The group document.
- * @returns A new Group object.
- */
-export function groupDocumentToObject(group) {
-    return new Group(group._id, group.name, group.users, group.dateCreated, group.creator, group.messages);
-}
-
-/**
- * Returns a User object out of a user document.
- * @param {Document} user The user document.
- * @returns A new User object.
- */
-export function userDocumentToObject(user) {
-    return new User(user.username, user.icon, user.bio, user._id, user.token, user.groupIDs);
-}
-
-/**
- * Inserts a document into a collection
- * @param {Collection} collection A collection, needs to be used with db.collection();
- * @param {Document} document The document to insert
- */
-export async function insertInto(collection, document) {
-    db.collection(collection).insertOne(document);
-}
-
-/**
- * Implicitly creates a new document with the parameters of a group object.
- * @param {Group} group The group to add to the database.
- */
-export async function addGroup(group) {
-    const newGroup = {
-        "_id": group._id,
-        "name": group.name,
-        "userIDs": group.userIDs,
-        "dateCreated": group.dateCreated,
-        "creatorID": group.creatorID,
-        "messages": group.messages
-    }
-    insertInto(groupsCollection, newGroup);
-}
-
-export function messageObjectToDocument(message) {
-    return {
-        "_id": new ObjectId(),
-        "content": message.content,
-        "user": message.user,
-        "deleted": message.deleted,
-        "dateCreated": message.dateCreated
-    }
-}
-
-/**
- * Adds a message document to the end of the message list of a group document
- * @param {Document} message The message we wish to add.
- * @param {Document} group The group we wish to add the message to.
- */
-export async function addMessageToGroup(message, group) {
-    try {
-        let groupsMessages = group.messages;
-        let groupsMessagesIDs = [];
-        
-        if(groupsMessages) {
-            groupsMessages.forEach(element => {
-                groupsMessagesIDs.push(element._id);
-            });
+    if(groupID) {
+        let index = sockets.indexOf(socketID);
+        if(index > -1) {
+            sockets.splice(index, 1);
         }
-        
-        if(!contains(groupsMessagesIDs, message._id)) {
-            groupsMessages.push(message);
-            await db.collection(groupsCollection).updateOne({ _id:group._id }, {$set: {messages: groupsMessages}});
-        }
-
-    } catch (error) {
-        console.error(error);
-    }
-}
-
-export async function connectUserAndGroup(userID, groupID) {
-    try {
-        let user = await dbp.getUserByID(db, userID);
-        let group = await dbp.getGroupByID(db, groupID);
-
-        let usersGroupIDs = user.groupIDs;
-        let groupsUserIDs = group.userIDs;
     
-        if(!contains(usersGroupIDs, group._id)) {
-            usersGroupIDs.push(group._id);
-            await db.collection(usersCollection).updateOne({ _id:user._id}, {$set: {groupIDs: usersGroupIDs}});
-        }
-        if(!contains(groupsUserIDs, user._id)) {
-            groupsUserIDs.push(user._id);
-            await db.collection(groupsCollection).updateOne({ _id:group._id}, {$set: {userIDs: groupsUserIDs}});
-        }
-    } catch (error) {
-        console.error(error);
+        socketsInGroups.set(groupID.toString(), sockets);
     }
+}
+
+export function getSocketsInGroupView(groupID) {
+    return socketsInGroups.get(groupID.toString());
 }

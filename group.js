@@ -1,44 +1,28 @@
-export class Group {
-    _id;
-    name;
-    // Only IDs of users are stored!!
-    userIDs;
-    dateCreated;
+import mongoose from "mongoose";
 
-    // Only ID of creator is stored
-    creatorID;
-    messages;
-
-    constructor(_id, name, userIDs, dateCreated, creatorID, messages) {
-        this._id = _id;
-        this.name = name;
-        this.userIDs = userIDs;
-        this.dateCreated = dateCreated;
-        this.creatorID = creatorID;
-        this.messages = messages;
+const GroupSchema = new mongoose.Schema({
+    content: {
+        messages: [
+            { type: mongoose.Schema.Types.ObjectId, ref: 'Message' }
+        ]
+    },
+    properties: {
+        name: { type: String, required: true},
+        creator: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        dateCreated: { type: String },
+        users: [
+            { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+        ],
+        icon: { type: String, validate: {
+            validator: function(value) {
+                const urlPattern = /(http|https):\/\/(\w+:{0,1}\w*#)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%#!\-/]))?/;
+                const urlRegExp = new RegExp(urlPattern);
+                return value.match(urlRegExp);
+            },
+                message: props => `${props.value} is not a valid URL`    
+            }
+        }
     }
+}, { collection: 'Groups'});
 
-    get _id() {
-        return this._id;
-    }
-
-    get name() {
-        return this.name;
-    }
-
-    get userIDs() {
-        return this.userIDs;
-    }
-
-    get dateCreated() {
-        return this.dateCreated;
-    }
-
-    get creatorID() {
-        return this.creatorID;
-    }
-
-    get messages() {
-        return this.messages;
-    }
-}
+export const Group = mongoose.model('Group', GroupSchema);

@@ -23,7 +23,6 @@
     </head>
 
     <script type="text/javascript">
-
         function getCookie(name) {
             var cookie = document.cookie;
             var result;
@@ -53,90 +52,92 @@
             return element;
         }
 
+        function get(elementId) {
+            return document.getElementById(elementId);
+        }
+
+        function addMessage(message) {
+            let chatMessagesArea = get('chatMessagesArea');
+            const messageTextArea = newElement("div", "messageTextArea", "messageTextArea");
+            messageTextArea.textContent = message.content.text;
+            if(socket.lastSeenMessage == null || socket.lastSeenMessage.properties.creator._id != message.properties.creator._id) {
+                let messageEntry = newElement("div", "message", "message");
+                const messageUserArea = newElement("div", "messageUserArea", "messageUserArea");
+                const messageUserAreaText = newElement("a", "messageUserAreaText", "messageUserAreaText");
+
+                messageUserAreaText.textContent = message.properties.creator.profile.username;
+
+                messageUserArea.appendChild(messageUserAreaText);
+                messageEntry.appendChild(messageUserArea);
+                messageEntry.appendChild(messageTextArea);
+                chatMessagesArea.appendChild(messageEntry);
+            } else {
+                chatMessagesArea.lastChild.appendChild(messageTextArea);
+            }
+            socket.lastSeenMessage = message;
+            chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
+        }
+
+        function addGroup(group) {
+            let groupEntry = newElement('button', 'sidebarElement', 'sidebarElement');
+            groupEntry.textContent = group.properties.name;
+            groupEntry.onClick = function() {
+                socket.emit('Request group data', group.properties._id, socket.currentGroupID);
+            }
+            get('sidebarElements').append(groupEntry);
+        }
+
         $(document).ready(function() {
+            // Request user data
             socket.emit("Request user data", getCookie("token"));
 
-            socket.on("Respond user data", (userData) => {
-                socket.userData = userData;
-                const sidebar = document.getElementById("sidebarElements");
-                const groupIDs = userData.groupIDs;
-                socket.emit("Request group names", userData.groupIDs);
-                socket.on("Respond group names", (groupTuples) => {
-                    groupTuples.forEach(groupTuple => {
-                        let groupEntry = newElement("button", "sidebarElement", "sidebarElement");
-                        groupEntry.innerText = groupTuple.groupName;
-                        groupEntry.onclick = function() {
-                            if(contains(socket.userData.groupIDs, groupTuple.groupID)) {
-                                socket.emit("Request join group", groupTuple.groupID, socket.currentGroupID);
-                            }
-                        }
-                        sidebar.appendChild(groupEntry);
-                    });
-                });
-                socket.emit("Request join group", groupIDs[0], null);
-            });
-
-            
-
-            
-            function addMessage(messageData, chatMessagesArea) {
-                /*
-                * messageEntry
-                *   - messageUserArea
-                *       - messageUserAreaText
-                *   - messageTextArea
-                */
-
-                const messageTextArea = newElement("div", "messageTextArea", "messageTextArea");
-                messageTextArea.textContent = messageData.content;
-
-                if(socket.lastSeenMessage == null || messageData.user._id != socket.lastSeenMessage.user._id) {
-                    let messageEntry = newElement("div", "message", "message");
-                    const messageUserArea = newElement("div", "messageUserArea", "messageUserArea");
-                    const messageUserAreaText = newElement("a", "messageUserAreaText", "messageUserAreaText");
-                    
-                    messageUserAreaText.textContent = messageData.user.username;
-                    
-                    messageUserArea.appendChild(messageUserAreaText);
-                    messageEntry.appendChild(messageUserArea);
-                    messageEntry.appendChild(messageTextArea);
-                    chatMessagesArea.appendChild(messageEntry);
-
-                } else {
-                    chatMessagesArea.lastChild.appendChild(messageTextArea);
+            // Upon receiving the user data, populate group entries
+            socket.on("Respond user data", (user) => {
+                socket.user = user;
+                let groups = user.properties.groups;
+                for(const group of groups) {
+                    addGroup(group);
                 }
-                
-                socket.lastSeenMessage = messageData;
-                chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
-            }
+                socket.emit('Request group data', groups[0]._id, null);
+            });
 
-            socket.on("Respond join group", (groupData) => {
-                socket.currentGroupID = groupData._id;
-                const chatMessagesArea = document.getElementById("chatMessagesArea");
+            socket.on('Respond join group', (group) => {
+                addGroup(group);
+            })
+
+            socket.on('Respond group data', (group) => {
+                socket.currentGroupID = group._id;
+                let chatMessagesArea = get('chatMessagesArea');
                 chatMessagesArea.innerHTML = '';
-                groupData.messages.forEach(message => {
-                    addMessage(message, chatMessagesArea);
+                group.content.messages.forEach(message => {
+                    addMessage(message);
                 });
             });
 
-            socket.on("Get new message", (messageData) => {
-                const chatMessagesArea = document.getElementById("chatMessagesArea");
-                addMessage(messageData, chatMessagesArea);
+            socket.on('Get new message', (message) => {
+                addMessage(message);
             });
 
-            const chatInputField = document.getElementById("chatInputField");
-            chatInputField.addEventListener("keydown", function (e) {
-                if (e.key === "Enter" && !e.shiftKey) {
+            let chatInputField = get('chatInputField');
+            chatInputField.addEventListener('keydown', function(e) {
+                
+                if(e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     if(chatInputField.value.trim().length > 0) {
-                        message = new function() {
-                            this.user = socket.userData;
-                            this.dateCreated = Date.now;
-                            this.content = chatInputField.value;
-                            this.deleted = false;
+                        const message = {
+                            content: {
+                                text: chatInputField.value
+                            },
+                            properties: {
+                                creator: socket.user,
+                                dateCreated: Date.now().toString(),
+                                deleted: false,
+                                edited: false
+                            }
                         }
-                        chatInputField.value = "";
-                        socket.emit("Send new message", socket.currentGroupID, message);
+
+                        chatInputField.value = '';
+                        socket.emit('Send new message', socket.currentGroupID, message);
                     }
                 }
             });
@@ -147,16 +148,16 @@
     <body>
         <div class="main">
             <div class="sidebar" id="sidebar">
-                <div id="sidebarElements" class="sidebarElements">
+                <div  class="sidebarElements" id="sidebarElements">
                 </div>
                 <div class="sideBottomBar">
-                    <button class="sideBottomBarElement">new group</button>
-                    <button class="sideBottomBarElement">add friend</button>
+                    <button class="sideBottomBarElement">New group</button>
+                    <button class="sideBottomBarElement">Add friend</button>
                 </div>
             </div>
             <div class="chat" id="chat">
                 <div class="chatMessagesArea" id="chatMessagesArea"></div>
-                <textarea class="chatInputField" id="chatInputField"></textarea>
+                <textarea placeholder="Type your message here..." class="chatInputField" id="chatInputField"></textarea>
             </div>
         </div>
     </body>

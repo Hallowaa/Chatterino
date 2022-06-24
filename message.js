@@ -1,35 +1,15 @@
-export class Message {
-    user;
-    dateCreated;
-    content;
-    deleted;
-    _id;
+import mongoose from 'mongoose';
 
-    constructor(user, dateCreated, content, deleted, _id) {
-        this.user = user;
-        this.dateCreated = dateCreated;
-        this.content = content;
-        this.deleted = deleted;
-        this._id = _id;
+const MessageSchema = new mongoose.Schema({
+    content: {
+        text: { type: String }
+    },
+    properties: {
+        creator: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        dateCreated: { type: String },
+        edited: { type: Boolean },
+        deleted: { type: Boolean }
     }
+}, { collection: 'Messages'});
 
-    get user() {
-        return this.user;
-    }
-
-    get dateCreated() {
-        return this.dateCreated;
-    }
-
-    get content() {
-        return this.content;
-    }
-
-    get deleted() {
-        return this.deleted;
-    }
-
-    get _id() {
-        return _id;
-    }
-}
+export const Message = mongoose.model('Message', MessageSchema);

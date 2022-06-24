@@ -23,32 +23,27 @@ html,body {
 .chatInputField {
     display: flex;
     width: inherit;
-    overflow: hidden;
-    resize: none;
-    max-height: 40%;
-    min-height: 5%;
+    height: 4%; /* locking height for now because it looks ugly otherwise*/
     flex-direction: column;
-    overflow-y: auto;
     
     background-color: #2b2b2e;
-    color:aliceblue;
+    color: aliceblue;
     font-family: 'Montserrat', sans-serif;
-    font-size: 3vmin;
+    font-size: 2.5vmin;
     box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.171);
     border: none;
     
-    border-radius: 2vmin;
-    margin-bottom: 2vmin;
-    margin-left: 1vmin;
-    margin-right: 1vmin;
-    padding-top: 1vmin;
-    padding-left: 2vmin;
-    margin: 0.5vmin;
-    margin-top: auto;
-}
+    resize:none; /*removes the annoying resize icon on the bottom right*/
 
-.chatInputField > textarea {
-    flex:1;
+    border-radius: 2vmin;
+    padding: 1.5vmin;
+    margin: 0.5vmin;
+    margin-top: auto; /*snaps it to the bottom, STOP REMOVING THIS NAT*/
+
+    /*I've removed everything we tried for making this expand.
+     * There were so many things that it was hard to keep track of what was
+     * needed and what was useless.
+     * it's just a clean slate for when we want to try again.*/
 }
 
 .sidebar {
@@ -60,11 +55,13 @@ html,body {
     width: 20%;
     justify-self: left;
     flex-direction: column;
-    box-shadow: 5px 5px 10px rgb(0, 0, 0);
+    box-shadow: 0px 0px 10px rgb(0, 0, 0);
 }
 
 .sidebarElements {
-    display:flex;
+
+    /* Without this, the group entries on the sidebar do NOT take up the full width */
+    display: flex;
 }
 
 .sidebarElement {
@@ -74,7 +71,9 @@ html,body {
     color:aliceblue;
     font-family: 'Montserrat', sans-serif;
     font-size: large;
+    font-weight:bold;
     border-radius: 1vmin;
+    border: solid #2b2b2e 2px;
     margin: 1vmin;
     padding-top: 2vmin;
     padding-bottom: 2vmin;
@@ -93,6 +92,8 @@ html,body {
     width: 100%;
     flex-direction: row;
     box-shadow: 5px 5px 10px rgb(0, 0, 0);
+    border-top-left-radius:10px;
+    border-top-right-radius:10px;
 }
 
 .sideBottomBarElement {
@@ -106,10 +107,13 @@ html,body {
     margin: 1vmin;
     padding-top: 2vmin;
     padding-bottom: 2vmin;
-    padding-left: 1vmin;
     cursor: pointer;
-    align-items: center;
-    text-align: center;
+    border: solid #2b2b2e 2px;
+    font-weight:bold;
+
+    /*I have no fucking idea how, but the below centers it, and should for all buttons*/
+    display: table-cell;
+    vertical-align: middle;
 }
 
 .message {
