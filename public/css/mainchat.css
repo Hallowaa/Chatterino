@@ -46,6 +46,7 @@ html,body {
      * it's just a clean slate for when we want to try again.*/
 }
 
+
 .sidebar {
     display: flex;
     background-color: #141414;
