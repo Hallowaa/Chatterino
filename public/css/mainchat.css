@@ -24,19 +24,20 @@ html,body {
     display: flex;
     flex-grow: 0;
     width: inherit;
-    min-height: 4vmin; /* locking height for now because it looks ugly otherwise*/
+    max-height: 3vmin;
+    min-height: 3vmin; /* locking height for now because it looks ugly otherwise*/
     flex-direction: column;
     
     background-color: #2b2b2e;
     color: aliceblue;
     font-family: 'Montserrat', sans-serif;
-    font-size: 2.5vmin;
+    font-size: 2vmin;
     box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.171);
     border: none;
     
     resize:none; /*removes the annoying resize icon on the bottom right*/
 
-    border-radius: 2vmin;
+    border-radius: 2.2vmin;
     padding: 1.5vmin;
     margin: 0.5vmin;
     margin-top: auto; /*snaps it to the bottom, STOP REMOVING THIS NAT*/
@@ -119,7 +120,7 @@ html,body {
 }
 
 .message {
-    background-color: #242427;
+    background-color: #18181a;;
     border-radius: 2vmin;
     width: inherit;
     margin:1vmin;
