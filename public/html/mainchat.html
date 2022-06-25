@@ -57,30 +57,67 @@
             return document.getElementById(elementId);
         }
 
+        function error(message) {
+            get('alert-container').style.display = 'flex';
+            get('alert').textContent = message;
+            setTimeout(
+                function() {
+                    get('alert-container').style.display = 'none';
+                    get('alert').textContent = '';
+                }, 2000
+            );
+        }
+
         function addMessage(message) {
-            let chatMessagesArea = get('chatMessagesArea');
+            /*
+             _________________________
+            | pfp   | Nickname        |
+            |       |_________________|
+            |       | message         |
+            |       | content         |
+            |_______|_________________|
+
+
+
+            */
+            const chatMessagesArea = get('chatMessagesArea');
             const messageTextArea = newElement("div", "messageTextArea", "messageTextArea");
             messageTextArea.textContent = message.content.text;
             if(socket.lastSeenMessage == null || socket.lastSeenMessage.properties.creator._id != message.properties.creator._id) {
-                let messageEntry = newElement("div", "message", "message");
+                const messageEntry = newElement("div", "message flex-row", "message");
+
+                // USER ICON
+                const messageIconContainer = newElement("div", "messageIconContainer", "messageIconContainer");
+                const userIcon = newElement("img", "userIcon", "userIcon");
+                if(!message.properties.creator.profile.icon) { userIcon.src = "./images/default_icon.png"; } else {
+                    // TODO: Add the user's icon
+                }
+                messageIconContainer.appendChild(userIcon);
+                messageEntry.appendChild(messageIconContainer);
+
+                // USER INFO
+                const messageUserAndContentContainer = newElement("div", "flex-column", "messageUserAndContentContainer");
                 const messageUserArea = newElement("div", "messageUserArea", "messageUserArea");
                 const messageUserAreaText = newElement("a", "messageUserAreaText", "messageUserAreaText");
-
-                messageUserAreaText.textContent = message.properties.creator.profile.username;
-
+                messageUserAreaText.textContent = message.properties.creator.profile.nickname;
                 messageUserArea.appendChild(messageUserAreaText);
-                messageEntry.appendChild(messageUserArea);
-                messageEntry.appendChild(messageTextArea);
+                messageUserAndContentContainer.appendChild(messageUserArea);
+
+                // MESSAGE CONTENT
+                const messageTextArea = newElement("div", "messageTextArea", "messageTextArea");
+                messageTextArea.textContent = message.content.text;
+                messageUserAndContentContainer.appendChild(messageTextArea);
+                messageEntry.appendChild(messageUserAndContentContainer);
                 chatMessagesArea.appendChild(messageEntry);
             } else {
-                chatMessagesArea.lastChild.appendChild(messageTextArea);
+                chatMessagesArea.lastChild.querySelector('#messageUserAndContentContainer').appendChild(messageTextArea);
             }
             socket.lastSeenMessage = message;
             chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
         }
 
         function addGroup(group) {
-            let groupEntry = newElement('button', 'sidebarElement', 'sidebarElement');
+            let groupEntry = newElement('button', 'sidebarElement default-font', 'sidebarElement');
             groupEntry.textContent = group.properties.name;
             groupEntry.onclick = function() {
                 socket.emit('Request group data', group.properties._id, socket.currentGroupID);
@@ -99,6 +136,10 @@
                 for(const group of groups) {
                     addGroup(group);
                 }
+
+                get('nicknameInput').value = socket.user.profile.nickname;
+
+                // TO DELETE
                 socket.emit('Request group data', groups[0]._id, null);
             });
 
@@ -196,6 +237,15 @@
                 hideAllExcept(panels, get('uiSettingsPanel'));
                 showPanel(get('uiSettingsPanel'));
             }
+
+            get('uploadIcon').onchange = function() {
+                if(this.files[0].size > 2097152) {
+                    error('File is too big!');
+                    this.value = '';
+                } else {
+                    socket.emit('Request icon change');
+                }
+            }
         });
 
         
@@ -203,14 +253,35 @@
     </script>
 
     <body>
-        <div class="settingsPanel" id="settingsPanel">
+        <div class="alert-container popup-container--transparent" id="alert-container">
+            <div class="default-font border-radius--big" id="alert"></div>
+        </div>
+        <div class="settings-panel-container popup-container--dark" id="settingsPanel">
             <div class="settingsPanelContent" id="settingsPanelContent">
                 <div class="settingsPanelTopBar" id="settingsPanelTopBar">
-                    <button class="settingsPanelTopBarEntry" id="settingsPanelTopBarUserSettings">User Settings</button>
-                    <button class="settingsPanelTopBarEntry" id="settingsPanelTopBarFriends">Friends</button>
-                    <button class="settingsPanelTopBarEntry" id="settingsPanelTopBarUiSettings">UI Settings</button>
+                    <button class="settingsPanelTopBarEntry default-font" id="settingsPanelTopBarUserSettings">User Settings</button>
+                    <button class="settingsPanelTopBarEntry default-font" id="settingsPanelTopBarFriends">Friends</button>
+                    <button class="settingsPanelTopBarEntry default-font" id="settingsPanelTopBarUiSettings">UI Settings</button>
                 </div>
                 <div class="settingsPanelEntry" id="userSettingsPanel">
+                    <div class="flex-row">
+                        <div class="userSettingsPanelLabel default-font" id="iconLabel">
+                            Icon
+                        </div>
+                        <label for="uploadIcon" class="uploadIconLabel default-font" id="uploadIconLabel">Upload</label>
+                        <input class="uploadIcon" type="file" id="uploadIcon"/>
+                    </div>
+                    <div class="flex-row">
+                        <label for="nicknameInput" class="userSettingsPanelLabel default-font" id="nicknameLabel">
+                            Nickname
+                        </label>
+                        <input type="text" class="userSettingsPanelNicknameInput default-font" id="nicknameInput" maxLength="32" spellcheck="false">
+                    </div>
+                    <div class="flex-row">
+                        <div class="userSettingsPanelLabel default-font" id="colorLabel">
+                            Color
+                        </div>
+                    </div>
                 </div>
                 <div class="settingsPanelEntry" id="friendsPanel">
                 </div>
@@ -218,20 +289,20 @@
                 </div>
             </div>
         </div>
-        <div class="main">
-            <div class="sidebar" id="sidebar">
-                <div class="sidebarElements" id="sidebarElements">
+        <div id="main">
+            <div class="sidebar flex-column" id="sidebar">
+                <div class="sidebarElements default-font" id="sidebarElements">
                 </div>
-                <div class="sideBottomBar">
+                <div class="sideBottomBar flex-row">
                     <button class="settingsPanelButton" id="settingsPanelButton">
                         <img src="./images/menu_icon.png" height="80%" width="80%">
                     </button>
                     
                 </div>
             </div>
-            <div class="chat" id="chat">
+            <div class="chat default-font flex-column border-radius--big" id="chat">
                 <div class="chatMessagesArea" id="chatMessagesArea"></div>
-                <textarea placeholder="Type your message here..." class="chatInputField" id="chatInputField"></textarea>
+                <textarea placeholder="Type your message here..." class="default-font flex-column" id="chatInputField"></textarea>
             </div>
         </div>
     </body>

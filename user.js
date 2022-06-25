@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const UserSchema = new mongoose.Schema({
     profile: {
-        username: { type: String, required: true },
+        nickname: { type: String, required: true },
         bio: { type: String },
         color: { type: String },
         icon: { type: String, validate: {
@@ -16,6 +16,7 @@ const UserSchema = new mongoose.Schema({
         }
     },
     properties: {
+        username: { type: String, required: true},
         token: { type: String, index: true, required: true },
         password: { type: String, required: true },
         friends: [

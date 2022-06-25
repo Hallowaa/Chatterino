@@ -23,10 +23,11 @@ connection.on('error', console.error.bind(console, 'connection error:'));
  * 
  */
 export async function generateDefaults() {
-    let admin = await User.findOne({ 'profile.username': process.env.ADMIN_USERNAME, 'properties.password': process.env.ADMIN_PASSWORD});
+    let admin = await User.findOne({ 'properties.username': process.env.ADMIN_USERNAME, 'properties.password': process.env.ADMIN_PASSWORD});
     if(!admin) {
         await User.create({
-            'profile.username': process.env.ADMIN_USERNAME,
+            'profile.nickname': process.env.ADMIN_USERNAME,
+            'properties.username': process.env.ADMIN_USERNAME,
             'properties.password': process.env.ADMIN_PASSWORD,
             'properties.token': stringUtils.newToken(USER_TOKEN_LENGTH)}
         );
@@ -42,7 +43,7 @@ export async function generateDefaults() {
         console.log('Main group has been created');
     }   
 
-    admin = await User.findOne({ 'profile.username': process.env.ADMIN_USERNAME, 'properties.password': process.env.ADMIN_PASSWORD});
+    admin = await User.findOne({ 'properties.username': process.env.ADMIN_USERNAME, 'properties.password': process.env.ADMIN_PASSWORD});
     mainGroup = await Group.findOne({ '_id': new ObjectId('000000000000000000000000')});
     await userJoinGroup(admin, mainGroup);
 }

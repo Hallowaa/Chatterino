@@ -57,7 +57,7 @@ app.get("/mainchat", (req, res) => {
 });
 
 async function login(server, socket, username, password) {
-    let user = await db.getUser({ 'profile.username': username, 'properties.password': password});
+    let user = await db.getUser({ 'properties.username': username, 'properties.password': password});
     if(user) {
         server.to(socket.id).emit('Login success', user.properties.token);
     }
