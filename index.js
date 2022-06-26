@@ -102,9 +102,9 @@ function notifyMessageAddedInGroup(server, groupID, message) {
 
 async function saveIconChange(server, socket, userID, bytes) {
     const buffer = Buffer.from(bytes);
-
-    const path = 'user-icons/' + userID;
-
+    
+    const path = 'user-icons/' + userID + '.png';
+    
     let params = {
         Bucket: process.env.S3_BUCKET,
         Key: path,
@@ -115,7 +115,12 @@ async function saveIconChange(server, socket, userID, bytes) {
         if(err) {
             console.error(err);
         } else {
-            console.log('Successfully uploaded image!');
+            (async () => {
+                console.log('Successfully uploaded image!');
+                let user = await db.getUser({ _id: userID });
+                user.profile.icon = 'https://chatterinoxd.s3.eu-central-1.amazonaws.com/user-icons/' + userID + '.png';
+                await user.save();
+            })();
         }
     });
 }

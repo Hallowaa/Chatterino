@@ -29,6 +29,19 @@ export const s3 = new aws.S3({
     signatureVersion: 'v4'
 });
 
+export async function getS3Object(key) {
+
+    let params = {
+        Bucket: bucketName,
+        Key: key
+    }
+
+    s3.getObject(params, function(error, data) {
+        if(error) console.error(error);
+        else return data;
+    });
+}
+
 /**
  * Generates the default collections and an admin user.
  * 

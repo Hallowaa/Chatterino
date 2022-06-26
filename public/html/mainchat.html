@@ -91,6 +91,7 @@
                 const userIcon = newElement("img", "userIcon", "userIcon");
                 if(!message.properties.creator.profile.icon) { userIcon.src = "./images/default_icon.png"; } else {
                     // TODO: Add the user's icon
+                    userIcon.src = socket.user.profile.icon;
                 }
                 messageIconContainer.appendChild(userIcon);
                 messageEntry.appendChild(messageIconContainer);
@@ -127,10 +128,11 @@
 
         $(document).ready(function() {
             // Request user data
-            socket.emit("Request user data", getCookie("token"));
+            socket.emit('Request user data', getCookie('token'));
 
             // Upon receiving the user data, populate group entries
-            socket.on("Respond user data", (user) => {
+            socket.on('Respond user data', (user) => {
+                console.log(user);
                 socket.user = user;
                 let groups = user.properties.groups;
                 for(const group of groups) {
@@ -138,14 +140,17 @@
                 }
 
                 get('nicknameInput').value = socket.user.profile.nickname;
-
                 // TO DELETE
                 socket.emit('Request group data', groups[0]._id, null);
             });
 
+            socket.on('User icon change', (url) => {
+                socket.user.profile.icon = url;
+            });
+
             socket.on('Respond join group', (group) => {
                 addGroup(group);
-            })
+            });
 
             socket.on('Respond group data', (group) => {
                 socket.currentGroupID = group._id;
@@ -248,7 +253,7 @@
                     reader.onload = function() {
                         const bytes = new Uint8Array(this.result);
                         console.log(socket.user.properties.username);
-                        socket.emit('Request icon change', socket.user.properties.username, bytes);
+                        socket.emit('Request icon change', socket.user._id, bytes);
                     }
                     reader.readAsArrayBuffer(file);
                 }
