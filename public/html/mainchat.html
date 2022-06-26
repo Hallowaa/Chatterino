@@ -239,11 +239,18 @@
             }
 
             get('uploadIcon').onchange = function() {
-                if(this.files[0].size > 2097152) {
+                const file = this.files[0];
+                if(file.size > 2097152) {
                     error('File is too big!');
                     this.value = '';
                 } else {
-                    socket.emit('Request icon change');
+                    const reader = new FileReader();
+                    reader.onload = function() {
+                        const bytes = new Uint8Array(this.result);
+                        console.log(socket.user.properties.username);
+                        socket.emit('Request icon change', socket.user.properties.username, bytes);
+                    }
+                    reader.readAsArrayBuffer(file);
                 }
             }
         });

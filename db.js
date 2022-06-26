@@ -5,6 +5,7 @@ import { Message } from './message.js';
 import * as stringUtils from './string_utils.js';
 import { ObjectId } from "mongodb";
 import 'dotenv/config';
+import aws from 'aws-sdk';
 export const socketsInGroups = new Map();
 const USER_TOKEN_LENGTH = 15;
 
@@ -17,6 +18,16 @@ mongoose.connect(process.env.MONGODB_URI, {useUnifiedTopology: true}).then(
 const connection = mongoose.connection;
 connection.on('error', console.error.bind(console, 'connection error:'));
 
+const region = process.env.S3_REGION;
+const bucketName = process.env.S3_BUCKET;
+const accessKeyId = process.env.S3_KEY_ID;
+const secretAccessKey = process.env.S3_SECRET_KEY;
+export const s3 = new aws.S3({
+    region,
+    accessKeyId,
+    secretAccessKey,
+    signatureVersion: 'v4'
+});
 
 /**
  * Generates the default collections and an admin user.

@@ -39,6 +39,10 @@ async function main() {
             sendMessageInGroup(server, groupID, messageData);
         });
 
+        socket.on('Request icon change', (userID, bytes) => {
+            saveIconChange(server, socket, userID, bytes);
+        })
+
     });
 
     httpServer.listen(process.env.PORT);
@@ -94,4 +98,24 @@ function notifyMessageAddedInGroup(server, groupID, message) {
     for(const socketID of socketIDs) {
         server.to(socketID).emit('Get new message', message);
     }
+}
+
+async function saveIconChange(server, socket, userID, bytes) {
+    const buffer = Buffer.from(bytes);
+
+    const path = 'user-icons/' + userID;
+
+    let params = {
+        Bucket: process.env.S3_BUCKET,
+        Key: path,
+        Body: buffer,
+    };
+
+    db.s3.putObject(params, function (err, data) {
+        if(err) {
+            console.error(err);
+        } else {
+            console.log('Successfully uploaded image!');
+        }
+    });
 }
