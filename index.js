@@ -120,6 +120,7 @@ async function saveIconChange(server, socket, userID, bytes) {
                 let user = await db.getUser({ _id: userID });
                 user.profile.icon = 'https://chatterinoxd.s3.eu-central-1.amazonaws.com/user-icons/' + userID + '.png';
                 await user.save();
+                server.to(socket.id).emit('User icon change', 'https://chatterinoxd.s3.eu-central-1.amazonaws.com/user-icons/' + userID + '.png');
             })();
         }
     });
