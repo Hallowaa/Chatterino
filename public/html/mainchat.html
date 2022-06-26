@@ -91,7 +91,7 @@
                 const userIcon = newElement("img", "userIcon", "userIcon");
                 if(!message.properties.creator.profile.icon) { userIcon.src = "./images/default_icon.png"; } else {
                     // TODO: Add the user's icon
-                    userIcon.src = socket.user.profile.icon;
+                    userIcon.src = message.properties.creator.profile.icon;
                 }
                 messageIconContainer.appendChild(userIcon);
                 messageEntry.appendChild(messageIconContainer);
