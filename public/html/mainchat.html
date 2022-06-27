@@ -99,20 +99,20 @@
                 const messageUserAreaText = newElement("a", "messageUserAreaText", "messageUserAreaText");
                 const messageUserAreaDate = newElement("a", "messageUserAreaDate", "messageUserAreaDate");
 
-                const date = new Date(parseInt(message.properties.dateCreated));
-
+                // DATE
+                let date = new Date(parseInt(message.properties.dateCreated));
                 const year = date.getFullYear();
                 const month = date.getMonth() + 1;
                 const day = date.getDate();
                 const hours = date.getHours();
                 const minutes = date.getMinutes();
-                const pmam = date.get
+                const pmOrAm = hours/12>=1?'PM':'AM';
                 let dateString = '';
                 if (day == new Date(Date.now()).getDate()) {
-                    dateString += 'Today at ' + hours + ':' + minutes
+                    dateString += 'Today at ' + addZeroFront(hours%12) + ':' + addZeroFront(minutes) + ' ' + pmOrAm;
                 }
                 else {
-                    dateString += (day < 10?'0'+ day:day) + '/' + (month < 10?'0'+ month:month) + '/' + year;
+                    dateString += addZeroFront(day) + '/' + addZeroFront(month) + '/' + year;
                 }
                 messageUserAreaDate.textContent = dateString;
                 messageUserAreaText.textContent = message.properties.creator.profile.nickname;
@@ -131,6 +131,10 @@
             }
             socket.lastSeenMessage = message;
             chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
+        }
+
+        function addZeroFront(value) {
+            return (value < 10?'0'+ value:value);
         }
 
         function addGroup(group) {
