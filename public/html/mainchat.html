@@ -79,7 +79,7 @@
         function addMessage(message) {
             /*
              _________________________
-            | pfp   | Nickname        |
+            | pfp   | nickname  date  |
             |       |_________________|
             |       | message         |
             |       | content         |
@@ -162,6 +162,8 @@
 
     <script type="text/javascript">
         $(document).ready(function() {
+            get('chatInputField').style.display='none';
+
             socket.on('Receive alert', (content, type) => {
                 displayAlert(content, type);
             })
@@ -189,15 +191,15 @@
             });
 
             socket.on('Respond instance data', (instance) => {
-                
                 socket.currentInstanceID = instance._id;
                 get('sidebarElements').innerHTML = '';
                 instance.properties.channels.forEach(channel => {
                     addChannel(channel);
-                })
+                });
             });
 
             socket.on('Respond channel data', (channel) => {
+                get('chatInputField').style.display='flex';
                 socket.lastSeenMessage = null;
                 socket.currentChannelID = channel._id;
                 get('chatMessagesArea').innerHTML = '';
@@ -205,7 +207,7 @@
                     addMessage(message);
                 });
                 
-            })
+            });
 
             socket.on('Get new message', (channelID, message) => {
                 if(channelID === socket.currentChannelID) {
@@ -215,7 +217,10 @@
 
             let chatInputField = get('chatInputField');
             chatInputField.addEventListener('keydown', function(e) {
-                
+                if(!(socket.currentChannelID && socket.currentInstanceID)) {
+                    e.preventDefault();
+                }
+
                 if(e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     if(chatInputField.value.trim().length > 0) {
@@ -230,7 +235,6 @@
                                 edited: false
                             }
                         }
-
                         chatInputField.value = '';
                         socket.emit('Send new message', socket.currentInstanceID, socket.currentChannelID, message);
                     }
