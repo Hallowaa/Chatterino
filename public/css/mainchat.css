@@ -126,6 +126,7 @@ html,body {
     justify-content: center;
     border: none;
     cursor: pointer;
+    width: 60px;
 }
 
 .sideBottomBarElement {
@@ -199,7 +200,7 @@ html,body {
     background-color: #141414;
     border: solid #2b2b2e 0.5vmin;
     box-shadow: 0px 0px 10px rgb(0, 0, 0);
-    border-radius: 2vmin;
+    border-radius: 20px;
     flex-direction: column;
 }
 
@@ -209,18 +210,18 @@ html,body {
     overflow: auto;
     background-color: #1f1f22;
     justify-content: space-between;
-    margin: 0.5vmin;
+    margin: 0.75vmin;
     padding: 1vmin;
-    border-radius: 2vmin;
+    border-radius: 18px;
 }
 
 .settingsPanelTopBarEntry {
     
-    font-size: xx-large;
+    font-size: x-large;
     font-weight:bold;
     padding: 2vmin;
     background-color: transparent;
-    border-radius: 2vmin;
+    border-radius: 25px;
     border: none;
     cursor: pointer;
 }
@@ -291,7 +292,7 @@ html,body {
     position: fixed;
     width: 100%;
     height: 100%;
-    background-color: #14141457;
+    background-color: #14141499;
 }
 
 .userIcon {
