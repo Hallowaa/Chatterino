@@ -280,10 +280,19 @@ html,body {
 #alert {
     padding: 3vmin;
     margin-bottom: 10vmin;
-    border-color: red;
     border-width: 0.2vmin;
-    box-shadow: 0px 0px 3px red;
     background-color:#18181a;
+    font-weight: bold;
+}
+
+.alert--error {
+    border-color: red;
+    box-shadow: 0px 0px 10px red;
+}
+
+.alert--announcement {
+    border-color: rgb(42, 149, 248);
+    box-shadow: 0px 0px 10px rgb(42, 149, 248);
 }
 
 .popup-container--transparent {

@@ -114,27 +114,32 @@ async function saveIconChange(server, socket, userID, bytes, type) {
         Body: buffer,
     };
 
-    let deleteParams = {
-        Bucket: process.env.S3_BUCKET,
-        Key: 'user-icons/' + user.profile.icon.split('/').pop()
-    }
-
+    
     db.s3.putObject(putParams, function (error, data) {
         if(error) {
             console.error(error);
+            server.to(socket.id).emit('Receive alert', 'Could not change user icon', 'error');
         } else {
             (async () => {
                 const newURL = 'https://chatterinoxd.s3.eu-central-1.amazonaws.com/' + path;
                 user.profile.icon = newURL;
                 await user.save();
-                server.to(socket.id).emit(newURL);
+                server.to(socket.id).emit('Receive alert', 'User icon has been changed', 'announcement');
             })();
         }
     });
 
-    db.s3.deleteObject(deleteParams, function(error, data) {
-        if(error) {
-            console.error(error);
+    if(user.profile.icon) {
+        let deleteParams = {
+            Bucket: process.env.S3_BUCKET,
+            Key: 'user-icons/' + user.profile.icon.split('/').pop()
         }
-    })
+    
+        db.s3.deleteObject(deleteParams, function(error, data) {
+            if(error) {
+                console.error(error);
+            }
+        })
+    }
+    
 }
