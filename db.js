@@ -1,12 +1,24 @@
 import mongoose from "mongoose";
 import { User } from './user.js';
-import { Group } from './group.js';
+import { Instance } from './instance.js';
+import { Channel } from './channel.js';
 import { Message } from './message.js';
+import { Test } from './test.js';
 import * as stringUtils from './string_utils.js';
 import { ObjectId } from "mongodb";
 import 'dotenv/config';
 import aws from 'aws-sdk';
-export const socketsInGroups = new Map();
+
+// For keeping track of the users within an instance. This is used
+// so that whenever a message is sent into a channel that the user
+// is currently not viewing, some visual feedback can still be sent.
+export const socketsInInstance = new Map();
+
+// For keeping track of the users within a channel. This is used
+// to notify sockets whenever a message is sent within a channel
+// they are viewing.
+export const socketsInChannel = new Map();
+
 const USER_TOKEN_LENGTH = 15;
 
 
@@ -44,7 +56,6 @@ export async function getS3Object(key) {
 
 /**
  * Generates the default collections and an admin user.
- * 
  */
 export async function generateDefaults() {
     let admin = await User.findOne({ 'properties.username': process.env.ADMIN_USERNAME, 'properties.password': process.env.ADMIN_PASSWORD});
@@ -58,30 +69,49 @@ export async function generateDefaults() {
         console.log('Admin has been created');
     }
     
-    let mainGroup = await Group.findOne({ '_id': new ObjectId('000000000000000000000000')});
-    if(!mainGroup) {
-        await Group.create({
-            '_id': new ObjectId('000000000000000000000000'),
-            'properties.name': 'Chatterino'
+    let mainInstance = await Instance.findOne({ '_id': new ObjectId('000000000000000000000000')});
+    if(!mainInstance) {
+        await Channel.create({
+            'properties.instanceId': new ObjectId('000000000000000000000000'),
+            'properties.name': 'main'
         });
-        console.log('Main group has been created');
+
+        await Channel.create({
+            'properties.instanceId': new ObjectId('000000000000000000000000'),
+            'properties.name': 'test'
+        })
+
+        let mainChannel = await Channel.findOne({ 'properties.instanceId': new ObjectId('000000000000000000000000'), 'properties.name': 'main'});
+        let testChannel = await Channel.findOne({ 'properties.instanceId': new ObjectId('000000000000000000000000'), 'properties.name': 'test'});
+        await Instance.create({
+            '_id': new ObjectId('000000000000000000000000'),
+            'properties.name': 'Chatterino',
+            'properties.channels': [mainChannel._id, testChannel._id],
+            'properties.isDirect': false,
+            'properties.dateCreated': Date.now().toString()
+        });
+        console.log('Main instance has been created');
     }   
 
     admin = await User.findOne({ 'properties.username': process.env.ADMIN_USERNAME, 'properties.password': process.env.ADMIN_PASSWORD});
-    mainGroup = await Group.findOne({ '_id': new ObjectId('000000000000000000000000')});
-    await userJoinGroup(admin, mainGroup);
+    mainInstance = await Instance.findOne({ '_id': new ObjectId('000000000000000000000000')});
+    await userJoinInstance(admin, mainInstance);
 }
 
 export async function getUser(query) {
-    return await User.findOne(query).populate('properties.groups');
+    return await User.findOne(query).populate('properties.instances');
 }
 
-export async function getGroupShallow(query) {
-    return await Group.findOne(query).populate('content.messages').populate('properties.users');
+export async function getInstanceShallow(query) {
+    return await Instance.findOne(query).populate('properties.channels').populate('properties.users');
 }
 
-export async function getGroupDeep(query) {
-    return await Group.findOne(query).populate({
+export async function getChannelShallow(query) {
+    return await Channel.findOne(query);
+}
+
+export async function getChannelDeep(query) {
+    return await Channel.findOne(query).populate({
         path: 'content',
         populate: {
             path: 'messages',
@@ -90,7 +120,7 @@ export async function getGroupDeep(query) {
                 populate: 'creator'
             }
         }
-    }).populate('properties.users');
+    });
 }
 
 export async function createMessage(messageData) {
@@ -107,22 +137,27 @@ export async function createMessage(messageData) {
     });
 
     await result.save();
-    
-    return await result.populate('properties.creator');;
+    return await result.populate('properties.creator');
 }
 
-export async function newMessageInGroup(message, group) {
-    group.content.messages.push(message);
-    await group.save();
+export async function newMessageInChannel(message, channel) {
+    channel.content.messages.push(message);
+    await channel.save();
 }
 
-export async function userJoinGroup(user, group) {
-    let filteredGroups = user.properties.groups.map(groupFromProps => groupFromProps.toString());
-    if(!contains(filteredGroups, group._id.toString())) {
-        user.properties.groups.push(group);
-        group.properties.users.push(user);
+/**
+ * Adds a user model to the properties.users of an instance model if and only if the user is not already in it.
+ * @param {User} user The user model.
+ * @param {Instance} instance The instance model
+ */
+export async function userJoinInstance(user, instance) {
+    // InstanceIds (Not populated).
+    let filteredInstances = user.properties.instances.map(instances => instances.toString());
+    if(!contains(filteredInstances, instance._id.toString())) {
+        user.properties.instances.push(instance);
+        instance.properties.users.push(user);
         await user.save();
-        await group.save();
+        await instance.save();
     }
 }
 
@@ -135,35 +170,78 @@ function contains(array, toSearch) {
 }
 
 /**
- * Method used to keep track of what sockets to notify for what group when an event happens in that group.
+ * Method used to keep track of what sockets to notify for what instance when an event happens in that instance.
  * @param {String} socketID The ID of the socket with socket.id
- * @param {String} groupID the ID of the group with group._id
+ * @param {String} instanceID the ID of the instance with instance._id
  */
-export function socketEnterGroupView(socketID, groupID) {
-    let sockets = socketsInGroups.get(groupID);
+export function socketEnterInstanceView(socketID, instanceID) {
+    let sockets = socketsInInstance.get(instanceID);
     if(sockets == null) sockets = [];
     sockets.push(socketID);
-    socketsInGroups.set(groupID.toString(), sockets);
+    socketsInInstance.set(instanceID.toString(), sockets);
 }
 
 /**
- * Method used to keep track of what sockets to notify for what group when an event happens in that group.
+ * Method used to keep track of what sockets to notify for what instance when an event happens in that instance.
  * @param {String} socketID The ID of the socket with socket.id
- * @param {String} groupID the ID of the group with group._id
+ * @param {String} instanceID the ID of the instance with instance._id
  */
-export function socketLeaveGroupView(socketID, groupID) {
-    let sockets = socketsInGroups.get(groupID);
-
-    if(groupID) {
+export function socketLeaveInstanceView(socketID, instanceID) {
+    if(instanceID) {
+        let sockets = socketsInInstance.get(instanceID);
         let index = sockets.indexOf(socketID);
         if(index > -1) {
             sockets.splice(index, 1);
         }
-    
-        socketsInGroups.set(groupID.toString(), sockets);
+        socketsInInstance.set(instanceID.toString(), sockets);
     }
 }
 
-export function getSocketsInGroupView(groupID) {
-    return socketsInGroups.get(groupID.toString());
+/**
+ * Method used to keep track of what sockets to notify for what channel when an event happens in that channel.
+ * @param {String} socketID The ID of the socket with socket.id
+ * @param {String} channelID the ID of the channel with channel._id
+ */
+export function socketEnterChannelView(socketID, channelID) {
+    let sockets = socketsInChannel.get(channelID);
+    if(sockets == null) sockets = [];
+    sockets.push(socketID);
+    socketsInChannel.set(channelID.toString(), sockets);
+}
+
+/**
+ * Method used to keep track of what sockets to notify for what channelID when an event happens in that channelID.
+ * @param {String} socketID The ID of the socket with socket.id
+ * @param {String} channelID the ID of the channelID with channelID._id
+ */
+export function socketLeaveChannelView(socketID, channelID) {
+    if(channelID) {
+        let sockets = socketsInChannel.get(channelID);
+        let index = sockets.indexOf(socketID);
+        if(index > -1) {
+            sockets.splice(index, 1);
+        }
+        socketsInChannel.set(channelID.toString(), sockets);
+    }
+}
+
+export function getSocketsInInstanceView(instanceID) {
+    return socketsInInstance.get(instanceID.toString());
+}
+
+export function getSocketsInChannelView(channelID) {
+    return socketsInChannel.get(channelID.toString());
+}
+
+// TESTING
+export async function createTest() {
+    await Test.create({
+        'testNestedFieldOne.testFieldOne': 'testOne',
+        'testNestedFieldOne.testFieldTwo': 'testTwo',
+        'testNestedFieldTwo.testFieldThree': 'testThree'
+    });
+}
+
+export async function updateTest() {
+    await Test.updateMany({}, { 'testNestedFieldTwo.testFieldFour': 'testFour'});
 }

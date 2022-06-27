@@ -22,8 +22,8 @@ const UserSchema = new mongoose.Schema({
         friends: [
             { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
         ],
-        groups: [
-            { type: mongoose.Schema.Types.ObjectId, ref: 'Group' }
+        instances: [
+            { type: mongoose.Schema.Types.ObjectId, ref: 'Instance' }
         ]
     }
 }, { collection: 'Users'});

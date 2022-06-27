@@ -57,7 +57,25 @@
             return document.getElementById(elementId);
         }
 
+        function addZeroFront(value) {
+            return (value < 10?'0'+ value:value);
+        }
 
+        function displayAlert(message, type) {
+            get('alert-container').style.display = 'flex';
+            get('alert').className += type==='error'?'default-font border-radius--big alert--error':'default-font border-radius--big alert--announcement';
+            get('alert').textContent = message;
+            setTimeout(
+                function() {
+                    get('alert-container').style.display = 'none';
+                    get('alert').className = 'default-font border-radius--big';
+                    get('alert').textContent = '';
+                }, 2000
+            );
+        }
+    </script>
+
+    <script type="text/javascript">
         function addMessage(message) {
             /*
              _________________________
@@ -122,74 +140,77 @@
             socket.lastSeenMessage = message;
             chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
         }
-
-        function addZeroFront(value) {
-            return (value < 10?'0'+ value:value);
-        }
-
-        function addGroup(group) {
-            let groupEntry = newElement('button', 'sidebarElement default-font', 'sidebarElement');
-            groupEntry.textContent = group.properties.name;
-            groupEntry.onclick = function() {
-                socket.emit('Request group data', group.properties._id, socket.currentGroupID);
+        function addInstance(instance) {
+            let instanceEntry = newElement('button', 'sidebarElement default-font', 'sidebarElement');
+            instanceEntry.textContent = instance.properties.name;
+            instanceEntry.onclick = function() {
+                socket.emit('Request instance data', instance._id, socket.currentInstanceID);
             }
-            get('sidebarElements').append(groupEntry);
+            get('sidebarElements').append(instanceEntry);
         }
-
-        function displayAlert(message, type) {
-            get('alert-container').style.display = 'flex';
-            get('alert').className += type==='error'?'default-font border-radius--big alert--error':'default-font border-radius--big alert--announcement';
-            get('alert').textContent = message;
-            setTimeout(
-                function() {
-                    get('alert-container').style.display = 'none';
-                    get('alert').className = 'default-font border-radius--big';
-                    get('alert').textContent = '';
-                }, 2000
-            );
+        function addChannel(channel) {
+            let channelEntry = newElement('button', 'sidebarElement default-font', 'sidebarElement');
+            channelEntry.textContent = channel.properties.name;
+            channelEntry.onclick = function() {
+                if(channel._id !== socket.currentChannelID) {
+                    socket.emit('Request channel data', channel._id, socket.currentChannelID);
+                }
+            }
+            get('sidebarElements').append(channelEntry);
         }
+    </script>
 
+    <script type="text/javascript">
         $(document).ready(function() {
-
             socket.on('Receive alert', (content, type) => {
                 displayAlert(content, type);
             })
-
-            // Request user data
+            
             socket.emit('Request user data', getCookie('token'));
 
-            // Upon receiving the user data, populate group entries
             socket.on('Respond user data', (user) => {
                 socket.user = user;
-                let groups = user.properties.groups;
-                for(const group of groups) {
-                    addGroup(group);
-                }
-
+                socket.emit('Request instances', user._id);
                 get('nicknameInput').value = socket.user.profile.nickname;
-                // TO DELETE
-                socket.emit('Request group data', groups[0]._id, null);
             });
+
+            socket.on('Respond instances', (instances) => {
+                for(const instance of instances) {
+                    addInstance(instance);
+                }
+            })
 
             socket.on('User icon change', (url) => {
                 socket.user.profile.icon = url;
             });
 
-            socket.on('Respond join group', (group) => {
-                addGroup(group);
+            socket.on('Respond join instance', (instance) => {
+                addInstance(instance);
             });
 
-            socket.on('Respond group data', (group) => {
-                socket.currentGroupID = group._id;
-                let chatMessagesArea = get('chatMessagesArea');
-                chatMessagesArea.innerHTML = '';
-                group.content.messages.forEach(message => {
+            socket.on('Respond instance data', (instance) => {
+                
+                socket.currentInstanceID = instance._id;
+                get('sidebarElements').innerHTML = '';
+                instance.properties.channels.forEach(channel => {
+                    addChannel(channel);
+                })
+            });
+
+            socket.on('Respond channel data', (channel) => {
+                socket.lastSeenMessage = null;
+                socket.currentChannelID = channel._id;
+                get('chatMessagesArea').innerHTML = '';
+                channel.content.messages.forEach(message => {
                     addMessage(message);
                 });
-            });
+                
+            })
 
-            socket.on('Get new message', (message) => {
-                addMessage(message);
+            socket.on('Get new message', (channelID, message) => {
+                if(channelID === socket.currentChannelID) {
+                    addMessage(message);
+                }
             });
 
             let chatInputField = get('chatInputField');
@@ -211,7 +232,7 @@
                         }
 
                         chatInputField.value = '';
-                        socket.emit('Send new message', socket.currentGroupID, message);
+                        socket.emit('Send new message', socket.currentInstanceID, socket.currentChannelID, message);
                     }
                 }
             });
@@ -332,13 +353,12 @@
         </div>
         <div id="main">
             <div class="sidebar flex-column" id="sidebar">
-                <div class="sidebarElements default-font" id="sidebarElements">
+                <div class="sidebarElements default-font flex-column" id="sidebarElements">
                 </div>
                 <div class="sideBottomBar flex-row">
                     <button class="settingsPanelButton" id="settingsPanelButton">
                         <img src="./images/menu_icon.png" height="80%" width="80%">
                     </button>
-                    
                 </div>
             </div>
             <div class="chat default-font flex-column border-radius--big" id="chat">

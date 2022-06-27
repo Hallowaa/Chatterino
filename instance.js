@@ -1,15 +1,13 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-const GroupSchema = new mongoose.Schema({
-    content: {
-        messages: [
-            { type: mongoose.Schema.Types.ObjectId, ref: 'Message' }
-        ]
-    },
+const InstanceSchema = new mongoose.Schema({
     properties: {
         name: { type: String, required: true},
+        channels: [
+            { type: mongoose.Schema.Types.ObjectId, ref: 'Channel', required: true }
+        ],
         creator: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-        dateCreated: { type: String },
+        dateCreated: { type: String, required: true },
         users: [
             { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
         ],
@@ -21,8 +19,9 @@ const GroupSchema = new mongoose.Schema({
             },
                 message: props => `${props.value} is not a valid URL`    
             }
-        }
+        },
+        isDirect: { type: Boolean, required: true}
     }
-}, { collection: 'Groups'});
+}, { collection: 'Instances'});
 
-export const Group = mongoose.model('Group', GroupSchema);
+export const Instance = mongoose.model('Instance', InstanceSchema);

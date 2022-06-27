@@ -24,25 +24,33 @@ async function main() {
             respondUserData(server, socket, token);
         });
 
-        socket.on('Request create group', () => {
+        socket.on('Request create instance', () => {
 
         });
 
-        socket.on('Request join group', (userID, groupID) => {
-            respondJoinGroup(server, socket, userID, groupID);
+        socket.on('Request instances', (userID) => {
+            respondInstances(server, socket, userID);
+        })
+
+        socket.on('Request join instance', (userID, instanceID) => {
+            respondJoinInstance(server, socket, userID, instanceID);
         });
 
-        socket.on('Request group data', (newGroupID, oldGroupID) => {
-            respondGroupData(server, socket, newGroupID, oldGroupID);
+        socket.on('Request instance data', (newInstanceID, oldInstanceID) => {
+            respondInstanceData(server, socket, newInstanceID, oldInstanceID);
         });
 
-        socket.on('Send new message', (groupID, messageData) => {
-            sendMessageInGroup(server, groupID, messageData);
+        socket.on('Request channel data', (newChannelID, oldChannelID) => {
+            respondChannelData(server, socket, newChannelID, oldChannelID);
+        })
+
+        socket.on('Send new message', (instanceID, channelID, messageData) => {
+            sendMessageInChannel(server, instanceID, channelID, messageData);
         });
 
         socket.on('Request icon change', (userID, bytes, type) => {
             saveIconChange(server, socket, userID, bytes, type);
-        })
+        });
 
     });
 
@@ -73,31 +81,43 @@ async function respondUserData(server, socket, token) {
     server.to(socket.id).emit('Respond user data', user);
 }
 
-async function respondJoinGroup(server, socket, userID, groupID) {
+async function respondJoinInstance(server, socket, userID, instanceID) {
     let user = await db.getUser({ '_id': userID });
-    let group = await db.getGroupShallow({ '_id': groupID });
-    await db.userJoinGroup(user, group);
-    server.to(socket.id).emit('Respond join group', group);
+    let instance = await db.getInstanceShallow({ '_id': instanceID });
+    await db.userJoinInstance(user, instance);
+    server.to(socket.id).emit('Respond join instance', instance);
 }
 
-async function respondGroupData(server, socket, newGroupID, oldGroupID) {
-    let group = await db.getGroupDeep({ '_id': newGroupID });
-    db.socketEnterGroupView(socket.id, newGroupID);
-    db.socketLeaveGroupView(socket.id, oldGroupID);
-    server.to(socket.id).emit('Respond group data', group);
+async function respondInstances(server, socket, userID) {
+    let user = await db.getUser({ _id: userID });
+    server.to(socket.id).emit('Respond instances', user.properties.instances);
 }
 
-async function sendMessageInGroup(server, groupID, messageData) {
-    let group = await db.getGroupShallow({ '_id': groupID });
+async function respondInstanceData(server, socket, newInstanceID, oldInstanceID) {
+    let instance = await db.getInstanceShallow({ '_id': newInstanceID });
+    db.socketEnterInstanceView(socket.id, newInstanceID);
+    db.socketLeaveInstanceView(socket.id, oldInstanceID);
+    server.to(socket.id).emit('Respond instance data', instance);
+}
+
+async function respondChannelData(server, socket, newChannelID, oldChannelID) {
+    let channel = await db.getChannelDeep({ '_id': newChannelID });
+    db.socketEnterChannelView(socket.id, newChannelID);
+    db.socketLeaveChannelView(socket.id, oldChannelID);
+    server.to(socket.id).emit('Respond channel data', channel);
+}
+
+async function sendMessageInChannel(server, instanceID, channelID, messageData) {
+    let channel = await db.getChannelShallow({ '_id': channelID });
     let message = await db.createMessage(messageData);
-    await db.newMessageInGroup(message, group);
-    notifyMessageAddedInGroup(server, groupID, message);
+    await db.newMessageInChannel(message, channel);
+    notifyMessageAddedInChannel(server, instanceID, channelID, message);
 }
 
-function notifyMessageAddedInGroup(server, groupID, message) {
-    const socketIDs = db.getSocketsInGroupView(groupID);
-    for(const socketID of socketIDs) {
-        server.to(socketID).emit('Get new message', message);
+function notifyMessageAddedInChannel(server, instanceID, channelID, message) {
+    const socketIDsChannel = db.getSocketsInChannelView(channelID);
+    for (const socketID of socketIDsChannel) {
+        server.to(socketID).emit('Get new message', channelID, message);
     }
 }
 
@@ -106,7 +126,6 @@ async function saveIconChange(server, socket, userID, bytes, type) {
     let random = newToken(6);
     const path = 'user-icons/' + userID + '_' + random + '.' + type;
     let user = await db.getUser({ _id: userID });
-
 
     let putParams = {
         Bucket: process.env.S3_BUCKET,
@@ -139,7 +158,7 @@ async function saveIconChange(server, socket, userID, bytes, type) {
             if(error) {
                 console.error(error);
             }
-        })
+        });
     }
     
 }
