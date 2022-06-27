@@ -296,8 +296,10 @@ html,body {
 
 .userIcon {
     height: 3em;
+    width: 3em;
     margin-right: 1.2vmin;
     border-radius: 50%;
+    object-fit: cover;
 }
 
 .settingsPanelTopBarEntry:hover {

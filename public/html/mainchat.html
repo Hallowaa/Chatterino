@@ -90,7 +90,6 @@
                 const messageIconContainer = newElement("div", "messageIconContainer", "messageIconContainer");
                 const userIcon = newElement("img", "userIcon", "userIcon");
                 if(!message.properties.creator.profile.icon) { userIcon.src = "./images/default_icon.png"; } else {
-                    // TODO: Add the user's icon
                     userIcon.src = message.properties.creator.profile.icon;
                 }
                 messageIconContainer.appendChild(userIcon);
@@ -132,7 +131,6 @@
 
             // Upon receiving the user data, populate group entries
             socket.on('Respond user data', (user) => {
-                console.log(user);
                 socket.user = user;
                 let groups = user.properties.groups;
                 for(const group of groups) {
@@ -245,17 +243,21 @@
 
             get('uploadIcon').onchange = function() {
                 const file = this.files[0];
-                if(file.size > 2097152) {
+                // Max file size of 8MiB
+                if(file.size > 8388608) {
                     error('File is too big!');
                     this.value = '';
-                } else {
+                } else if (file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/gif'){
                     const reader = new FileReader();
                     reader.onload = function() {
                         const bytes = new Uint8Array(this.result);
-                        console.log(socket.user.properties.username);
-                        socket.emit('Request icon change', socket.user._id, bytes);
+                        socket.emit('Request icon change', socket.user._id, bytes, file.type.split('/').pop());
                     }
                     reader.readAsArrayBuffer(file);
+                    this.value = '';
+                } else {
+                    error('File type not supported!');
+                    this.value = '';
                 }
             }
         });
@@ -281,7 +283,7 @@
                             Icon
                         </div>
                         <label for="uploadIcon" class="uploadIconLabel default-font" id="uploadIconLabel">Upload</label>
-                        <input class="uploadIcon" type="file" id="uploadIcon"/>
+                        <input class="uploadIcon" type="file" id="uploadIcon" accept="image/*"/>
                     </div>
                     <div class="flex-row">
                         <label for="nicknameInput" class="userSettingsPanelLabel default-font" id="nicknameLabel">

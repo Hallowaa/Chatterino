@@ -4,6 +4,7 @@ import { Server } from "socket.io";
 import * as path from 'path';
 import * as db from './db.js';
 import { fileURLToPath } from "url";
+import { newToken } from './string_utils.js';
 import 'dotenv/config';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -39,8 +40,8 @@ async function main() {
             sendMessageInGroup(server, groupID, messageData);
         });
 
-        socket.on('Request icon change', (userID, bytes) => {
-            saveIconChange(server, socket, userID, bytes);
+        socket.on('Request icon change', (userID, bytes, type) => {
+            saveIconChange(server, socket, userID, bytes, type);
         })
 
     });
@@ -100,28 +101,40 @@ function notifyMessageAddedInGroup(server, groupID, message) {
     }
 }
 
-async function saveIconChange(server, socket, userID, bytes) {
+async function saveIconChange(server, socket, userID, bytes, type) {
     const buffer = Buffer.from(bytes);
-    
-    const path = 'user-icons/' + userID + '.png';
-    
-    let params = {
+    let random = newToken(6);
+    const path = 'user-icons/' + userID + '_' + random + '.' + type;
+    let user = await db.getUser({ _id: userID });
+
+
+    let putParams = {
         Bucket: process.env.S3_BUCKET,
         Key: path,
         Body: buffer,
     };
 
-    db.s3.putObject(params, function (err, data) {
-        if(err) {
-            console.error(err);
+    let deleteParams = {
+        Bucket: process.env.S3_BUCKET,
+        Key: user.profile.icon.split('/').pop()
+    }
+
+    db.s3.putObject(putParams, function (error, data) {
+        if(error) {
+            console.error(error);
         } else {
             (async () => {
-                console.log('Successfully uploaded image!');
-                let user = await db.getUser({ _id: userID });
-                user.profile.icon = 'https://chatterinoxd.s3.eu-central-1.amazonaws.com/user-icons/' + userID + '.png';
+                const newURL = 'https://chatterinoxd.s3.eu-central-1.amazonaws.com/' + path;
+                user.profile.icon = newURL;
                 await user.save();
-                server.to(socket.id).emit('User icon change', 'https://chatterinoxd.s3.eu-central-1.amazonaws.com/user-icons/' + userID + '.png');
+                server.to(socket.id).emit(newURL);
             })();
         }
     });
+
+    db.s3.deleteObject(deleteParams, function(error, data) {
+        if(error) {
+            console.error(error);
+        }
+    })
 }
