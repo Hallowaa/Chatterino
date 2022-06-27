@@ -160,6 +160,13 @@ html,body {
     font-weight: bolder;
 }
 
+#messageUserAreaDate {
+    margin-left: 1vmin;
+    font-size: small;
+    color:rgba(240, 248, 255, 0.63);
+    align-self: flex-end;
+}
+
 .messageTextArea {
     max-width: inherit;
     word-wrap: break-word;

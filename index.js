@@ -116,7 +116,7 @@ async function saveIconChange(server, socket, userID, bytes, type) {
 
     let deleteParams = {
         Bucket: process.env.S3_BUCKET,
-        Key: user.profile.icon.split('/').pop()
+        Key: 'user-icons/' + user.profile.icon.split('/').pop()
     }
 
     db.s3.putObject(putParams, function (error, data) {

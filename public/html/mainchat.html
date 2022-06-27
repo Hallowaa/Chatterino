@@ -76,10 +76,8 @@
             |       | message         |
             |       | content         |
             |_______|_________________|
-
-
-
             */
+
             const chatMessagesArea = get('chatMessagesArea');
             const messageTextArea = newElement("div", "messageTextArea", "messageTextArea");
             messageTextArea.textContent = message.content.text;
@@ -97,10 +95,29 @@
 
                 // USER INFO
                 const messageUserAndContentContainer = newElement("div", "flex-column", "messageUserAndContentContainer");
-                const messageUserArea = newElement("div", "messageUserArea", "messageUserArea");
+                const messageUserArea = newElement("div", "messageUserArea flex-row", "messageUserArea");
                 const messageUserAreaText = newElement("a", "messageUserAreaText", "messageUserAreaText");
+                const messageUserAreaDate = newElement("a", "messageUserAreaDate", "messageUserAreaDate");
+
+                const date = new Date(parseInt(message.properties.dateCreated));
+
+                const year = date.getFullYear();
+                const month = date.getMonth() + 1;
+                const day = date.getDate();
+                const hours = date.getHours();
+                const minutes = date.getMinutes();
+                const pmam = date.get
+                let dateString = '';
+                if (day == new Date(Date.now()).getDate()) {
+                    dateString += 'Today at ' + hours + ':' + minutes
+                }
+                else {
+                    dateString += (day < 10?'0'+ day:day) + '/' + (month < 10?'0'+ month:month) + '/' + year;
+                }
+                messageUserAreaDate.textContent = dateString;
                 messageUserAreaText.textContent = message.properties.creator.profile.nickname;
                 messageUserArea.appendChild(messageUserAreaText);
+                messageUserArea.appendChild(messageUserAreaDate);
                 messageUserAndContentContainer.appendChild(messageUserArea);
 
                 // MESSAGE CONTENT
