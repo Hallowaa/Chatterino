@@ -52,6 +52,10 @@ async function main() {
             saveIconChange(server, socket, userID, bytes, type);
         });
 
+        socket.on('disconnect', (reason) => {
+            db.socketLeaveAll(socket.id);
+        })
+
     });
 
     httpServer.listen(process.env.PORT);

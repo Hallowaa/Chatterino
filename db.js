@@ -175,10 +175,16 @@ function contains(array, toSearch) {
  * @param {String} instanceID the ID of the instance with instance._id
  */
 export function socketEnterInstanceView(socketID, instanceID) {
-    let sockets = socketsInInstance.get(instanceID);
-    if(sockets == null) sockets = [];
-    sockets.push(socketID);
-    socketsInInstance.set(instanceID.toString(), sockets);
+    try {
+        let sockets = socketsInInstance.get(instanceID);
+        if(sockets == null) sockets = [];
+        sockets.push(socketID);
+        socketsInInstance.set(instanceID.toString(), sockets);
+    } catch (error) {
+        console.error(`[db.js] Failed to add socket with ID ${socketID} to instanceView of ${instanceID}`);
+        console.error(error);
+    }
+    
 }
 
 /**
@@ -187,14 +193,19 @@ export function socketEnterInstanceView(socketID, instanceID) {
  * @param {String} instanceID the ID of the instance with instance._id
  */
 export function socketLeaveInstanceView(socketID, instanceID) {
-    if(instanceID) {
-        let sockets = socketsInInstance.get(instanceID);
-        let index = sockets.indexOf(socketID);
-        if(index > -1) {
-            sockets.splice(index, 1);
+    try {
+        if(instanceID && socketID) {
+            let sockets = socketsInInstance.get(instanceID);
+            let index = sockets.indexOf(socketID);
+            if(index > -1) {
+                sockets.splice(index, 1);
+            }
+            socketsInInstance.set(instanceID.toString(), sockets);
         }
-        socketsInInstance.set(instanceID.toString(), sockets);
-    }
+    } catch (error) {
+        console.error(`[db.js] Failed to remove socket with ID ${socketID} from instanceView of ${instanceID}`);
+        console.error(error);
+    }   
 }
 
 /**
@@ -203,10 +214,15 @@ export function socketLeaveInstanceView(socketID, instanceID) {
  * @param {String} channelID the ID of the channel with channel._id
  */
 export function socketEnterChannelView(socketID, channelID) {
-    let sockets = socketsInChannel.get(channelID);
-    if(sockets == null) sockets = [];
-    sockets.push(socketID);
-    socketsInChannel.set(channelID.toString(), sockets);
+    try {
+        let sockets = socketsInChannel.get(channelID);
+        if(sockets == null) sockets = [];
+        sockets.push(socketID);
+        socketsInChannel.set(channelID.toString(), sockets);
+    } catch (error) {
+        console.error(`[db.js] Failed to add socket with ID ${socketID} to channelView of ${channelID}`);
+        console.error(error);
+    }
 }
 
 /**
@@ -215,13 +231,35 @@ export function socketEnterChannelView(socketID, channelID) {
  * @param {String} channelID the ID of the channelID with channelID._id
  */
 export function socketLeaveChannelView(socketID, channelID) {
-    if(channelID) {
-        let sockets = socketsInChannel.get(channelID);
-        let index = sockets.indexOf(socketID);
-        if(index > -1) {
-            sockets.splice(index, 1);
+    try {
+        if(channelID && socketID) {
+            let sockets = socketsInChannel.get(channelID);
+            let index = sockets.indexOf(socketID);
+            if(index > -1) {
+                sockets.splice(index, 1);
+            }
+            socketsInChannel.set(channelID.toString(), sockets);
         }
-        socketsInChannel.set(channelID.toString(), sockets);
+    } catch (error) {
+        console.error(`[db.js] Failed to remove socket with ID ${socketID} from channelView of ${channelID}`);
+        console.error(error);
+    }
+}
+
+export function socketLeaveAll(socketID) {
+    try {
+        if(socketID) {
+            for(let instanceID of socketsInInstance.keys()) {
+                socketLeaveInstanceView(socketID, instanceID);
+            }
+
+            for(let channelID of socketsInChannel.keys()) {
+                socketLeaveChannelView(socketID, channelID);
+            }
+        }
+    } catch (error) {
+        console.error(`[db.js] Failed to remove socket with ID ${socketID} from all instances and channels`);
+        console.error(error);
     }
 }
 
