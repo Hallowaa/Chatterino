@@ -3,6 +3,7 @@ import { User } from './user.js';
 import { Instance } from './instance.js';
 import { Channel } from './channel.js';
 import { Message } from './message.js';
+import { Emote } from './emote.js';
 import { Test } from './test.js';
 import * as stringUtils from './string_utils.js';
 import { ObjectId } from "mongodb";
@@ -103,11 +104,30 @@ export async function getUser(query) {
 }
 
 export async function getInstanceShallow(query) {
-    return await Instance.findOne(query).populate('properties.channels').populate('properties.users');
+    return await Instance.findOne(query).populate('properties.channels').populate('properties.users').populate('properties.emotes');
+}
+
+export async function getInstanceEmotes(query) {
+    return await Instance.findOne(query).populate('properties.emotes');
 }
 
 export async function getChannelShallow(query) {
     return await Channel.findOne(query);
+}
+
+export async function getEmote(query) {
+    return await Emote.findOne(query).populate('properties.creator');
+}
+
+export async function getUserAvaliableEmotes(user) {
+    let result = [];
+
+    let instances = await Instance.find({ 'properties.users': user._id }).populate({ path: 'properties', populate: 'emotes'});
+
+    for (const instance of instances) {
+        result.push(instance.properties.emotes);
+    }
+    return result;
 }
 
 export async function getChannelDeep(query) {
@@ -140,6 +160,25 @@ export async function createMessage(messageData) {
     return await result.populate('properties.creator');
 }
 
+export async function createEmote(emoteData) {
+    let result = new Emote({
+        _id: emoteData._id,
+        properties: {
+            name: emoteData.properties.name,
+            content: emoteData.properties.content,
+            creator: new mongoose.Types.ObjectId(emoteData.properties.creator._id)
+        }
+    });
+
+    await result.save();
+    return await result.populate('properties.creator');
+}
+
+export async function newEmoteInInstance(emote, instance) {
+    instance.properties.emotes.push(emote);
+    await instance.save();
+}
+
 export async function newMessageInChannel(message, channel) {
     channel.content.messages.push(message);
     await channel.save();
@@ -151,14 +190,32 @@ export async function newMessageInChannel(message, channel) {
  * @param {Instance} instance The instance model
  */
 export async function userJoinInstance(user, instance) {
-    // InstanceIds (Not populated).
-    let filteredInstances = user.properties.instances.map(instances => instances.toString());
-    if(!contains(filteredInstances, instance._id.toString())) {
-        user.properties.instances.push(instance);
-        instance.properties.users.push(user);
+    if(!contains(user.properties.instances.map(instances => instances.toString()), instance._id.toString())) {
+        user.properties.instances.push(instance._id);
         await user.save();
+    }
+
+    if(!contains(instance.properties.users.map(users => users.toString()), user._id.toString())) {
+        instance.properties.users.push(user._id);
         await instance.save();
     }
+}
+
+export async function connectAllToMain() {
+    let mainInstance = await Instance.findOne({ '_id': new ObjectId('000000000000000000000000')});
+    for await (const user of User.find({})) {
+        let filteredInstances = user.properties.instances.map(instances => instances.toString());
+        if(!contains(filteredInstances, mainInstance._id.toString())) {
+            user.properties.instances.push(mainInstance._id);
+            await user.save();
+        }
+
+        if(!contains(mainInstance.properties.users.map(users => users.toString()), user._id.toString())) {
+            mainInstance.properties.users.push(user._id);
+        }
+    }
+    
+    await mainInstance.save();
 }
 
 function contains(array, toSearch) {
@@ -194,8 +251,8 @@ export function socketEnterInstanceView(socketID, instanceID) {
  */
 export function socketLeaveInstanceView(socketID, instanceID) {
     try {
-        if(instanceID && socketID) {
-            let sockets = socketsInInstance.get(instanceID);
+        let sockets = socketsInInstance.get(instanceID);
+        if(instanceID && socketID && sockets) {
             let index = sockets.indexOf(socketID);
             if(index > -1) {
                 sockets.splice(index, 1);
@@ -232,8 +289,8 @@ export function socketEnterChannelView(socketID, channelID) {
  */
 export function socketLeaveChannelView(socketID, channelID) {
     try {
-        if(channelID && socketID) {
-            let sockets = socketsInChannel.get(channelID);
+        let sockets = socketsInChannel.get(channelID);
+        if(channelID && socketID && sockets) {
             let index = sockets.indexOf(socketID);
             if(index > -1) {
                 sockets.splice(index, 1);

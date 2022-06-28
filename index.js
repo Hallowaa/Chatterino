@@ -6,6 +6,7 @@ import * as db from './db.js';
 import { fileURLToPath } from "url";
 import { newToken } from './string_utils.js';
 import 'dotenv/config';
+import { ObjectId } from "mongodb";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,7 +31,7 @@ async function main() {
 
         socket.on('Request instances', (userID) => {
             respondInstances(server, socket, userID);
-        })
+        });
 
         socket.on('Request join instance', (userID, instanceID) => {
             respondJoinInstance(server, socket, userID, instanceID);
@@ -42,7 +43,7 @@ async function main() {
 
         socket.on('Request channel data', (newChannelID, oldChannelID) => {
             respondChannelData(server, socket, newChannelID, oldChannelID);
-        })
+        });
 
         socket.on('Send new message', (instanceID, channelID, messageData) => {
             sendMessageInChannel(server, instanceID, channelID, messageData);
@@ -52,9 +53,13 @@ async function main() {
             saveIconChange(server, socket, userID, bytes, type);
         });
 
+        socket.on('Request create emote', (userID, instanceID, bytes, type, emoteData) => {
+            createEmote(server, socket, userID, instanceID, bytes, type, emoteData);
+        });
+
         socket.on('disconnect', (reason) => {
             db.socketLeaveAll(socket.id);
-        })
+        });
 
     });
 
@@ -82,7 +87,8 @@ async function login(server, socket, username, password) {
 
 async function respondUserData(server, socket, token) {
     let user = await db.getUser({'properties.token': token });
-    server.to(socket.id).emit('Respond user data', user);
+    let availableEmotes = await db.getUserAvaliableEmotes(user);
+    server.to(socket.id).emit('Respond user data', user, availableEmotes);
 }
 
 async function respondJoinInstance(server, socket, userID, instanceID) {
@@ -115,12 +121,12 @@ async function sendMessageInChannel(server, instanceID, channelID, messageData) 
     let channel = await db.getChannelShallow({ '_id': channelID });
     let message = await db.createMessage(messageData);
     await db.newMessageInChannel(message, channel);
-    notifyMessageAddedInChannel(server, instanceID, channelID, message);
+    notifyMessageAddedInInstance(server, instanceID, channelID, message);
 }
 
-function notifyMessageAddedInChannel(server, instanceID, channelID, message) {
-    const socketIDsChannel = db.getSocketsInChannelView(channelID);
-    for (const socketID of socketIDsChannel) {
+function notifyMessageAddedInInstance(server, instanceID, channelID, message) {
+    const socketIDsInstance = db.getSocketsInInstanceView(instanceID);
+    for (const socketID of socketIDsInstance) {
         server.to(socketID).emit('Get new message', channelID, message);
     }
 }
@@ -164,5 +170,41 @@ async function saveIconChange(server, socket, userID, bytes, type) {
             }
         });
     }
-    
+}
+
+async function createEmote(server, socket, userID, instanceID, bytes, type, emoteData) {
+    if(!userID || !instanceID || !bytes || !type || !emoteData) {
+        server.to(socket.id).emit('Receive alert', 'Something went terribly wrong when trying to add the emote!', 'error');
+        return;
+    }
+    const buffer = Buffer.from(bytes);
+    const ID = new ObjectId();
+    const path = 'instance-emotes/' + ID + '.' + type;
+
+    let putParams = {
+        Bucket: process.env.S3_BUCKET,
+        Key: path,
+        Body: buffer,
+    };
+
+    db.s3.putObject(putParams, function(error, data) {
+        if(error) {
+            console.error(error);
+            
+        } else {
+            (async () => {
+                let user = await db.getUser({ _id: userID });
+                const newURL = 'https://chatterinoxd.s3.eu-central-1.amazonaws.com/' + path;
+                emoteData.properties.content = newURL;
+                emoteData.properties.creator = user._id;
+                emoteData._id = ID;
+                let emote = await db.createEmote(emoteData);
+                let instance = await db.getInstanceShallow({ _id: instanceID });
+                await db.newEmoteInInstance(emote, instance);
+                server.to(socket.id).emit('Receive alert', 'New emote has been added', 'announcement');
+            })();
+        }
+    });
+
+    // Update the list of emotes in the instance for all members.
 }

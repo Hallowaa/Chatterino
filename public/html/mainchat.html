@@ -170,7 +170,7 @@
             
             socket.emit('Request user data', getCookie('token'));
 
-            socket.on('Respond user data', (user) => {
+            socket.on('Respond user data', (user, availableEmotes) => {
                 socket.user = user;
                 socket.emit('Request instances', user._id);
                 get('nicknameInput').value = socket.user.profile.nickname;
@@ -220,6 +220,8 @@
                 if(channelID === socket.currentChannelID) {
                     addMessage(message);
                 }
+
+                // Else make the respective channel entry glow or something idk XD
             });
 
             let chatInputField = get('chatInputField');
@@ -308,7 +310,7 @@
                 if(file.size > 8388608) {
                     displayAlert('File is too big!', 'error');
                     this.value = '';
-                } else if (file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/gif'){
+                } else if (file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/gif') {
                     const reader = new FileReader();
                     reader.onload = function() {
                         const bytes = new Uint8Array(this.result);
@@ -317,6 +319,32 @@
                     reader.readAsArrayBuffer(file);
                     this.value = '';
                 } else {
+                    displayAlert('File type not supported!', 'error');
+                    this.value = '';
+                }
+            }
+
+            get('uploadEmote').onchange = function() {
+                const file = this.files[0];
+
+                // Max file size of 1MiB
+                if(file.size > 1048576) {
+                    displayAlert('File is too big!', 'error');
+                    this.value = '';
+                } else if (file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/gif') {
+                    const emoteData = {
+                        properties: {
+                            name: 'TEST_1',
+                        }
+                    }
+                    const reader = new FileReader();
+                    reader.onload = function () {
+                        const bytes = new Uint8Array(this.result);
+                        socket.emit('Request create emote', socket.user._id, socket.currentInstanceID , bytes, file.type.split('/').pop(), emoteData);
+                    }
+                    reader.readAsArrayBuffer(file);
+                    this.value = '';
+                }else {
                     displayAlert('File type not supported!', 'error');
                     this.value = '';
                 }
@@ -354,6 +382,13 @@
                         <div class="userSettingsPanelLabel default-font" id="colorLabel">
                             Color
                         </div>
+                    </div>
+                    <div class="flex-row">
+                        <div class="userSettingsPanelLabel default-font" id="TESTLABEL">
+                            TEST_ADD_EMOTE
+                        </div>
+                        <label for="uploadEmote" class="uploadIconLabel default-font" id="uploadIconLabel">Upload</label>
+                        <input class="uploadIcon" type="file" id="uploadEmote" accept="image/*"/>
                     </div>
                 </div>
                 <div class="settingsPanelEntry" id="friendsPanel">
