@@ -20,7 +20,10 @@ const InstanceSchema = new mongoose.Schema({
                 message: props => `${props.value} is not a valid URL`    
             }
         },
-        isDirect: { type: Boolean, required: true}
+        isDirect: { type: Boolean, required: true },
+        emotes: [
+            { type: mongoose.Schema.Types.ObjectId, ref: 'Emote' }
+        ]
     }
 }, { collection: 'Instances'});
 

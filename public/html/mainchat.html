@@ -166,7 +166,7 @@
 
             socket.on('Receive alert', (content, type) => {
                 displayAlert(content, type);
-            })
+            });
             
             socket.emit('Request user data', getCookie('token'));
 
@@ -180,10 +180,17 @@
                 for(const instance of instances) {
                     addInstance(instance);
                 }
-            })
+            });
 
             socket.on('User icon change', (url) => {
                 socket.user.profile.icon = url;
+            });
+
+            socket.on('reconnect', () => {
+                displayAlert('Reconnected', 'announcement');
+                if(socket.currentChannelID) socket.emit('Request channel data', socket.currentChannelID, null);
+                else if(socket.currentInstanceID) socket.emit('Request instance data', socket.currentInstanceID, null);
+                else if(socket.user._id) socket.emit('Request instances', socket.user._id);
             });
 
             socket.on('Respond join instance', (instance) => {
