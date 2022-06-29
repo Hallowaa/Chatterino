@@ -353,6 +353,7 @@
 
     </script>
 
+
     <body>
         <div class="alert-container popup-container--transparent" id="alert-container">
             <div class="default-font border-radius--big" id="alert"></div>
@@ -383,7 +384,7 @@
                             Color
                         </div>
                     </div>
-                    <div class="flex-row">
+                     <div class="flex-row">
                         <div class="userSettingsPanelLabel default-font" id="TESTLABEL">
                             TEST_ADD_EMOTE
                         </div>
@@ -397,19 +398,26 @@
                 </div>
             </div>
         </div>
-        <div id="main">
-            <div class="sidebar flex-column" id="sidebar">
-                <div class="sidebarElements default-font flex-column" id="sidebarElements">
+         <div class="topNavigationBarContainer">
+                <div class="topNavigationBar currentChannel" id="currentChannel">
                 </div>
-                <div class="sideBottomBar flex-row">
+                <div class="topNavigationBar serverList" id="serverList">
+                    servers go here!
+                </div>
+            </div>
+        <div class="mainInterface" id="mainInterface">
+            <div class="sidebar" id="sidebar">
+                <div class="sidebarElements" id="sidebarElements">
+                </div>
+                <div class="sideBottomBar">
                     <button class="settingsPanelButton" id="settingsPanelButton">
                         <img src="./images/menu_icon.png" height="80%" width="80%">
                     </button>
                 </div>
             </div>
-            <div class="chat default-font flex-column border-radius--big" id="chat">
+            <div class="chat" id="chat">
                 <div class="chatMessagesArea" id="chatMessagesArea"></div>
-                <textarea placeholder="Type your message here..." class="default-font flex-column" id="chatInputField"></textarea>
+                <textarea placeholder="Type your message here..." class="chatInputField" id="chatInputField"></textarea>
             </div>
         </div>
     </body>
