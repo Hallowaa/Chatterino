@@ -209,6 +209,7 @@
                 get('chatInputField').style.display='flex';
                 socket.lastSeenMessage = null;
                 socket.currentChannelID = channel._id;
+                get('currentChannel').textContent = '# ' + channel.properties.name;
                 get('chatMessagesArea').innerHTML = '';
                 channel.content.messages.forEach(message => {
                     addMessage(message);
