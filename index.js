@@ -132,6 +132,10 @@ function notifyMessageAddedInInstance(server, instanceID, channelID, message) {
 }
 
 async function saveIconChange(server, socket, userID, bytes, type) {
+    if(!userID ||!bytes || !type) {
+        // TODO: Tell user that something went wrong.
+        return;
+    }
     const buffer = Buffer.from(bytes);
     let random = newToken(6);
     const path = 'user-icons/' + userID + '_' + random + '.' + type;
@@ -147,13 +151,12 @@ async function saveIconChange(server, socket, userID, bytes, type) {
     db.s3.putObject(putParams, function (error, data) {
         if(error) {
             console.error(error);
-            server.to(socket.id).emit('Receive alert', 'Could not change user icon', 'error');
+            // TODO: Tell user that something went wrong.
         } else {
             (async () => {
                 const newURL = 'https://chatterinoxd.s3.eu-central-1.amazonaws.com/' + path;
                 user.profile.icon = newURL;
                 await user.save();
-                server.to(socket.id).emit('Receive alert', 'User icon has been changed', 'announcement');
             })();
         }
     });
@@ -174,7 +177,7 @@ async function saveIconChange(server, socket, userID, bytes, type) {
 
 async function createEmote(server, socket, userID, instanceID, bytes, type, emoteData) {
     if(!userID || !instanceID || !bytes || !type || !emoteData) {
-        server.to(socket.id).emit('Receive alert', 'Something went terribly wrong when trying to add the emote!', 'error');
+        // TODO: Tell user that something went wrong.
         return;
     }
     const buffer = Buffer.from(bytes);
@@ -189,6 +192,7 @@ async function createEmote(server, socket, userID, instanceID, bytes, type, emot
 
     db.s3.putObject(putParams, function(error, data) {
         if(error) {
+            // TODO: Tell user that something went wrong.
             console.error(error);
             
         } else {
@@ -201,7 +205,6 @@ async function createEmote(server, socket, userID, instanceID, bytes, type, emot
                 let emote = await db.createEmote(emoteData);
                 let instance = await db.getInstanceShallow({ _id: instanceID });
                 await db.newEmoteInInstance(emote, instance);
-                server.to(socket.id).emit('Receive alert', 'New emote has been added', 'announcement');
             })();
         }
     });

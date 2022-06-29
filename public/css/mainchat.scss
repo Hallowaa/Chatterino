@@ -3,6 +3,10 @@ $gray:#141414;
 $lightGray: #18181a;
 $lighterGray:#1f1f22;
 
+// hawwo added this color
+$lightestGray: #2a2a2e;
+
+
 html, body {
     margin:0px;
     height:100%;
@@ -32,16 +36,17 @@ html, body {
     background-color: $darkestGray;
 }
 
-.topNavigationBar {
+.topNavigationBar { 
     @include defaultFont($fontSize: 20px, $fontWeight: bolder);
     border-radius: 10px;
     margin:8px;
     background-color: $gray;
     width:100%;
     padding:10px;
+    
 }
 
-.currentChannel { width:16.5%; }
+.currentChannel { width:16.5%; overflow-x: auto;}
 
 /* ALL ABOUT THE SIDE BAR */
 .sidebar {
@@ -106,7 +111,7 @@ html, body {
     margin:10px;
     margin-top: auto;
     padding: 10px;
-    height:30px;
+    min-height:30px;
 }
 
 .message {
@@ -139,7 +144,7 @@ html, body {
     margin-top:0.5vmin;
 }
 
-.chatMessagesArea{overflow-y: auto;}
+.chatMessagesArea{overflow-y: auto; scroll-behavior: auto;}
 .messageUserAreaText { @include defaultFont($fontSize: 18px, $fontWeight: bolder); }
 
 /* ALL ABOUT THE SETTINGS MENU */
@@ -229,3 +234,39 @@ html, body {
 ::-webkit-scrollbar-track {background: #141414; }
 ::-webkit-scrollbar-thumb {border-radius: 1vmin; background: rgb(44, 44, 44);}
 ::-webkit-scrollbar-thumb:hover {background: rgb(65, 65, 65);}
+
+
+/* hawwo did this */
+
+.instanceDefaultIcon {
+    @include defaultFont($fontSize: medium, $fontWeight:bolder);
+    height: 1em;
+    width: 1em;
+    border-radius: 25%;
+    background-color: $lighterGray;
+    text-align: center;
+    padding: 0.5em;
+    margin-right:10px;
+}
+
+.instanceEntry {
+    @include defaultFont($fontSize: medium, $fontWeight:bold);
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    padding: 5px;
+    background-color: $lightGray;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.instanceEntry:hover {
+    background-color: $lightestGray;
+}
+
+.instanceList {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+}

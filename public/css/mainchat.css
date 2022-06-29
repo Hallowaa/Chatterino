@@ -2,12 +2,14 @@ html, body {
   margin: 0px;
   height: 100%;
   background-color: #1b1b1b;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23393939' fill-opacity='0.69'%3E%3Cpath d='M0 38.59l2.83-2.83 1.41 1.41L1.41 40H0v-1.41zM0 1.4l2.83 2.83 1.41-1.41L1.41 0H0v1.41zM38.59 40l-2.83-2.83 1.41-1.41L40 38.59V40h-1.41zM40 1.41l-2.83 2.83-1.41-1.41L38.59 0H40v1.41zM20 18.6l2.83-2.83 1.41 1.41L21.41 20l2.83 2.83-1.41 1.41L20 21.41l-2.83 2.83-1.41-1.41L18.59 20l-2.83-2.83 1.41-1.41L20 18.59z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23393939' fill-opacity='0.69'%3E%3Cpath d='M0 38.59l2.83-2.83 1.41 1.41L1.41 40H0v-1.41zM0 1.4l2.83 2.83 1.41-1.41L1.41 0H0v1.41zM38.59 40l-2.83-2.83 1.41-1.41L40 38.59V40h-1.41zM40 1.41l-2.83 2.83-1.41-1.41L38.59 0H40v1.41zM20 18.6l2.83-2.83 1.41 1.41L21.41 20l2.83 2.83-1.41 1.41L20 21.41l-2.83 2.83-1.41-1.41L18.59 20l-2.83-2.83 1.41-1.41L20 18.59z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
 
 .mainInterface {
   height: 93%;
   display: flex;
-  flex-direction: row; }
+  flex-direction: row;
+}
 
 /* ALL ABOUT THE TOP BAR */
 .topNavigationBarContainer {
@@ -16,21 +18,25 @@ html, body {
   height: 7%;
   display: flex;
   width: 100%;
-  background-color: #101010; }
+  background-color: #101010;
+}
 
 .topNavigationBar {
   font-size: 20px;
   font-weight: bolder;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   color: aliceblue;
   border-radius: 10px;
   margin: 8px;
   background-color: #141414;
   width: 100%;
-  padding: 10px; }
+  padding: 10px;
+}
 
 .currentChannel {
-  width: 16.5%; }
+  width: 16.5%;
+  overflow-x: auto;
+}
 
 /* ALL ABOUT THE SIDE BAR */
 .sidebar {
@@ -38,17 +44,18 @@ html, body {
   flex-direction: column;
   font-size: 23px;
   font-weight: 500;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   color: aliceblue;
   width: 18.5%;
   min-height: 90%;
   background-color: #141414;
-  box-shadow: 0px 0px 10px 3px rgba(0, 0, 0, 0.5); }
+  box-shadow: 0px 0px 10px 3px rgba(0, 0, 0, 0.5);
+}
 
 .sidebarElement {
   font-size: large;
   font-weight: bold;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   color: aliceblue;
   display: flex;
   background-color: #18181a;
@@ -57,7 +64,8 @@ html, body {
   margin: 3%;
   padding: 1vmin;
   cursor: pointer;
-  width: 95%; }
+  width: 95%;
+}
 
 .sideBottomBar {
   background-color: #1f1f22;
@@ -65,15 +73,17 @@ html, body {
   height: 7%;
   width: 100%;
   border-top-left-radius: 20px;
-  border-top-right-radius: 20px; }
+  border-top-right-radius: 20px;
+}
 
 .settingsPanelButton {
-  background-color: #14141400;
+  background-color: rgba(20, 20, 20, 0);
   border: none;
   cursor: pointer;
   width: 6vmin;
   height: 90%;
-  margin-top: 5px; }
+  margin-top: 5px;
+}
 
 /* ALL ABOUT THE CHAT AREA */
 .chat {
@@ -84,12 +94,13 @@ html, body {
   width: 100%;
   height: 90;
   border-radius: 20px;
-  box-shadow: 0px 0px 10px 3px rgba(0, 0, 0, 0.2); }
+  box-shadow: 0px 0px 10px 3px rgba(0, 0, 0, 0.2);
+}
 
 .chatInputField {
   font-size: 20px;
   font-weight: 500;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   color: aliceblue;
   border: none;
   border-radius: 15px;
@@ -99,52 +110,61 @@ html, body {
   margin: 10px;
   margin-top: auto;
   padding: 10px;
-  height: 30px; }
+  min-height: 30px;
+}
 
 .message {
   font-size: 16px;
   font-weight: 500;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   color: aliceblue;
   background-color: #18181a;
   border-radius: 20px;
   margin: 1vmin;
   padding: 1vmin;
-  display: flex; }
+  display: flex;
+}
 
 .userIcon {
   height: 50px;
   width: 50px;
   border-radius: 50%;
   object-fit: cover;
-  margin-right: 10px; }
+  margin-right: 10px;
+}
 
 #messageUserAreaDate {
   margin-left: 1vmin;
   font-size: small;
-  color: rgba(240, 248, 255, 0.63); }
+  color: rgba(240, 248, 255, 0.63);
+}
 
 .messageTextArea {
   word-wrap: break-word;
   word-break: break-all;
   white-space: pre-wrap;
-  margin-top: 0.5vmin; }
+  margin-top: 0.5vmin;
+}
 
 .chatMessagesArea {
-  overflow-y: auto; }
+  overflow-y: auto;
+  scroll-behavior: auto;
+}
 
 .messageUserAreaText {
   font-size: 18px;
   font-weight: bolder;
-  font-family: 'Montserrat', sans-serif;
-  color: aliceblue; }
+  font-family: "Montserrat", sans-serif;
+  color: aliceblue;
+}
 
 /* ALL ABOUT THE SETTINGS MENU */
 .settings-panel-container {
   z-index: 101;
   justify-content: center;
   align-items: center;
-  overflow: auto; }
+  overflow: auto;
+}
 
 .settingsPanelContent {
   display: flex;
@@ -152,9 +172,10 @@ html, body {
   height: 70%;
   background-color: #141414;
   border: solid #2b2b2e 0.5vmin;
-  box-shadow: 0px 0px 10px black;
+  box-shadow: 0px 0px 10px rgb(0, 0, 0);
   border-radius: 20px;
-  flex-direction: column; }
+  flex-direction: column;
+}
 
 .settingsPanelTopBar {
   display: flex;
@@ -164,54 +185,60 @@ html, body {
   justify-content: space-between;
   margin: 0.75vmin;
   padding: 1vmin;
-  border-radius: 18px; }
+  border-radius: 18px;
+}
 
 .settingsPanelTopBarEntry {
   font-size: x-large;
   font-weight: bold;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   color: aliceblue;
   padding: 2vmin;
   background-color: transparent;
   border-radius: 25px;
   border: none;
-  cursor: pointer; }
+  cursor: pointer;
+}
 
 .settingsPanelEntry {
   display: none;
   flex-direction: column;
-  justify-content: flex-start; }
+  justify-content: flex-start;
+}
 
 .userSettingsPanelLabel {
   font-size: x-large;
   font-weight: bolder;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   color: aliceblue;
-  margin: 4vmin; }
+  margin: 4vmin;
+}
 
 .popup-container--dark {
   display: none;
   position: fixed;
   width: 100%;
   height: 100%;
-  background-color: #14141499; }
+  background-color: rgba(20, 20, 20, 0.6);
+}
 
 /* FOR ALL SETTINGS MENU BUTTONS!*/
 .userSettingsPanelButton {
   font-size: large;
   font-weight: bolder;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   color: aliceblue;
   cursor: pointer;
   align-self: center;
   padding: 2vmin;
   border-radius: 2vmin;
-  background-color: #2b2b2e; }
+  background-color: #2b2b2e;
+}
 
 .userSettingsPanelNicknameInput {
   font-size: large;
   font-weight: bolder;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   color: aliceblue;
   cursor: pointer;
   align-self: center;
@@ -220,26 +247,73 @@ html, body {
   background-color: #2b2b2e;
   border: none;
   width: 30%;
-  cursor: default; }
+  cursor: default;
+}
 
 .uploadIcon {
-  display: none; }
+  display: none;
+}
 
 .flex-row {
-  display: flex; }
+  display: flex;
+}
 
 /*weird scrollbar stuff?*/
 ::-webkit-scrollbar {
-  width: 10px; }
+  width: 10px;
+}
 
 ::-webkit-scrollbar-track {
-  background: #141414; }
+  background: #141414;
+}
 
 ::-webkit-scrollbar-thumb {
   border-radius: 1vmin;
-  background: #2c2c2c; }
+  background: rgb(44, 44, 44);
+}
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #414141; }
+  background: rgb(65, 65, 65);
+}
+
+/* hawwo did this */
+.instanceDefaultIcon {
+  font-size: medium;
+  font-weight: bolder;
+  font-family: "Montserrat", sans-serif;
+  color: aliceblue;
+  height: 1em;
+  width: 1em;
+  border-radius: 25%;
+  background-color: #1f1f22;
+  text-align: center;
+  padding: 0.5em;
+  margin-right: 10px;
+}
+
+.instanceEntry {
+  font-size: medium;
+  font-weight: bold;
+  font-family: "Montserrat", sans-serif;
+  color: aliceblue;
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  padding: 5px;
+  background-color: #18181a;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.instanceEntry:hover {
+  background-color: #2a2a2e;
+}
+
+.instanceList {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+}
 
 /*# sourceMappingURL=mainchat.css.map */

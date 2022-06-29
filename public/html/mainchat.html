@@ -60,19 +60,6 @@
         function addZeroFront(value) {
             return (value < 10?'0'+ value:value);
         }
-
-        function displayAlert(message, type) {
-            get('alert-container').style.display = 'flex';
-            get('alert').className += type==='error'?'default-font border-radius--big alert--error':'default-font border-radius--big alert--announcement';
-            get('alert').textContent = message;
-            setTimeout(
-                function() {
-                    get('alert-container').style.display = 'none';
-                    get('alert').className = 'default-font border-radius--big';
-                    get('alert').textContent = '';
-                }, 2000
-            );
-        }
     </script>
 
     <script type="text/javascript">
@@ -141,16 +128,25 @@
             chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
         }
         function addInstance(instance) {
-            let instanceEntry = newElement('button', 'sidebarElement', 'sidebarElement');
-            instanceEntry.textContent = instance.properties.name;
+            let instanceEntry = newElement('button', 'instanceEntry', '');
+            let instanceName = newElement('a', '', '');
+            if(!instance.properties.icon || instance.properties.icon === '') {
+                let instanceDefaultImage = newElement('div', 'instanceDefaultIcon', '');
+                instanceDefaultImage.textContent = instance.properties.name.charAt(0);
+                instanceEntry.appendChild(instanceDefaultImage);
+            }
+            
+            instanceName.textContent = instance.properties.name;
+            instanceEntry.appendChild(instanceName);
             instanceEntry.onclick = function() {
+                if(instance._id !== socket.currentInstanceID)
                 socket.emit('Request instance data', instance._id, socket.currentInstanceID);
             }
-            get('sidebarElements').append(instanceEntry);
+            get('instanceList').append(instanceEntry);
         }
         function addChannel(channel) {
             let channelEntry = newElement('button', 'sidebarElement', 'sidebarElement');
-            channelEntry.textContent = channel.properties.name;
+            channelEntry.textContent = '# ' + channel.properties.name;
             channelEntry.onclick = function() {
                 if(channel._id !== socket.currentChannelID) {
                     socket.emit('Request channel data', channel._id, socket.currentChannelID);
@@ -163,10 +159,6 @@
     <script type="text/javascript">
         $(document).ready(function() {
             get('chatInputField').style.display='none';
-
-            socket.on('Receive alert', (content, type) => {
-                displayAlert(content, type);
-            });
             
             socket.emit('Request user data', getCookie('token'));
 
@@ -187,7 +179,6 @@
             });
 
             socket.on('reconnect', () => {
-                displayAlert('Reconnected', 'announcement');
                 if(socket.currentChannelID) socket.emit('Request channel data', socket.currentChannelID, null);
                 else if(socket.currentInstanceID) socket.emit('Request instance data', socket.currentInstanceID, null);
                 else if(socket.user._id) socket.emit('Request instances', socket.user._id);
@@ -200,6 +191,7 @@
             socket.on('Respond instance data', (instance) => {
                 socket.currentInstanceID = instance._id;
                 get('sidebarElements').innerHTML = '';
+                get('currentChannel').textContent = '@' + instance.properties.name;
                 instance.properties.channels.forEach(channel => {
                     addChannel(channel);
                 });
@@ -209,7 +201,8 @@
                 get('chatInputField').style.display='flex';
                 socket.lastSeenMessage = null;
                 socket.currentChannelID = channel._id;
-                get('currentChannel').textContent = '# ' + channel.properties.name;
+                const instanceName = get('currentChannel').textContent.split(' ').pop();
+                get('currentChannel').textContent = '#' + channel.properties.name + ' ' + instanceName;
                 get('chatMessagesArea').innerHTML = '';
                 channel.content.messages.forEach(message => {
                     addMessage(message);
@@ -309,7 +302,7 @@
                 const file = this.files[0];
                 // Max file size of 8MiB
                 if(file.size > 8388608) {
-                    displayAlert('File is too big!', 'error');
+                    // TODO: Tell user that file is too big
                     this.value = '';
                 } else if (file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/gif') {
                     const reader = new FileReader();
@@ -320,7 +313,7 @@
                     reader.readAsArrayBuffer(file);
                     this.value = '';
                 } else {
-                    displayAlert('File type not supported!', 'error');
+                    // TODO: Tell user that file type is not supported
                     this.value = '';
                 }
             }
@@ -330,7 +323,7 @@
 
                 // Max file size of 1MiB
                 if(file.size > 1048576) {
-                    displayAlert('File is too big!', 'error');
+                    // TODO: Tell user that file is too big
                     this.value = '';
                 } else if (file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/gif') {
                     const emoteData = {
@@ -346,7 +339,7 @@
                     reader.readAsArrayBuffer(file);
                     this.value = '';
                 }else {
-                    displayAlert('File type not supported!', 'error');
+                    // TODO: Tell user that file type is not supported
                     this.value = '';
                 }
             }
@@ -356,9 +349,6 @@
 
 
     <body>
-        <div class="alert-container popup-container--transparent" id="alert-container">
-            <div class="default-font border-radius--big" id="alert"></div>
-        </div>
         <div class="settings-panel-container popup-container--dark" id="settingsPanel">
             <div class="settingsPanelContent" id="settingsPanelContent">
                 <div class="settingsPanelTopBar" id="settingsPanelTopBar">
@@ -402,8 +392,7 @@
          <div class="topNavigationBarContainer">
                 <div class="topNavigationBar currentChannel" id="currentChannel">
                 </div>
-                <div class="topNavigationBar serverList" id="serverList">
-                    servers go here!
+                <div class="topNavigationBar instanceList" id="instanceList">
                 </div>
             </div>
         <div class="mainInterface" id="mainInterface">
