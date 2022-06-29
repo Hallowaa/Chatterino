@@ -1,0 +1,235 @@
+$darkestGray:#101010;
+$gray:#141414;
+$lightGray: #18181a;
+$lighterGray:#1f1f22;
+
+html, body {
+    margin:0px;
+    height:100%;
+    background-color: #1b1b1b;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23393939' fill-opacity='0.69'%3E%3Cpath d='M0 38.59l2.83-2.83 1.41 1.41L1.41 40H0v-1.41zM0 1.4l2.83 2.83 1.41-1.41L1.41 0H0v1.41zM38.59 40l-2.83-2.83 1.41-1.41L40 38.59V40h-1.41zM40 1.41l-2.83 2.83-1.41-1.41L38.59 0H40v1.41zM20 18.6l2.83-2.83 1.41 1.41L21.41 20l2.83 2.83-1.41 1.41L20 21.41l-2.83 2.83-1.41-1.41L18.59 20l-2.83-2.83 1.41-1.41L20 18.59z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
+
+@mixin defaultFont($fontSize: normal, $fontWeight: 500) {
+    font-size: $fontSize;
+    font-weight:$fontWeight;
+    font-family: 'Montserrat', sans-serif;
+    color: aliceblue;
+}
+
+.mainInterface {
+    height:93%;
+    display: flex;
+    flex-direction: row;
+}
+
+/* ALL ABOUT THE TOP BAR */
+.topNavigationBarContainer {
+    position: relative;
+    z-index:100;
+    height:7%;
+    display: flex;
+    width:100%;
+    background-color: $darkestGray;
+}
+
+.topNavigationBar {
+    @include defaultFont($fontSize: 20px, $fontWeight: bolder);
+    border-radius: 10px;
+    margin:8px;
+    background-color: $gray;
+    width:100%;
+    padding:10px;
+}
+
+.currentChannel { width:16.5%; }
+
+/* ALL ABOUT THE SIDE BAR */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    @include defaultFont($fontSize: 23px);
+    width:18.5%;
+    min-height:90%;
+    background-color:$gray;
+    box-shadow: 0px 0px 10px 3px rgba(0, 0, 0, 0.5);
+}
+
+.sidebarElement {
+    @include defaultFont($fontSize: large, $fontWeight: bold);
+    display: flex;
+    background-color: $lightGray;
+    border-radius: 10px;
+    border: solid $lighterGray 2px;
+    margin: 3%;
+    padding: 1vmin;
+    cursor: pointer;
+    width:95%;
+}
+
+.sideBottomBar {
+    background-color: $lighterGray;
+    margin-top: auto;
+    height: 7%;
+    width: 100%;
+    border-top-left-radius:20px;
+    border-top-right-radius:20px;
+}
+
+.settingsPanelButton {
+    background-color: #14141400;
+    border: none;
+    cursor: pointer;
+    width: 6vmin;
+    height: 90%;
+    margin-top:5px;
+}
+
+/* ALL ABOUT THE CHAT AREA */
+.chat{
+    display: flex;
+    flex-direction: column;
+    background-color: $gray;
+    margin: 3vmin;
+    width:100%;
+    height:90;
+    border-radius:20px;
+    box-shadow: 0px 0px 10px 3px rgba(0, 0, 0, 0.2);
+}
+
+.chatInputField {
+    @include defaultFont($fontSize: 20px);
+    border: none;
+    border-radius:15px;
+    resize: none;
+    box-shadow: 0px 0px 10px 3px rgba(0, 0, 0, 0.2);
+    background-color: $lighterGray;
+    margin:10px;
+    margin-top: auto;
+    padding: 10px;
+    height:30px;
+}
+
+.message {
+    @include defaultFont($fontSize: 16px);
+    background-color: $lightGray;
+    border-radius: 20px;
+    margin:1vmin;
+    padding: 1vmin;
+    display: flex;
+}
+
+.userIcon {
+    height: 50px;
+    width: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right:10px;
+}
+
+#messageUserAreaDate {
+    margin-left: 1vmin;
+    font-size: small;
+    color: rgba(240, 248, 255, 0.63);
+}
+
+.messageTextArea {
+    word-wrap: break-word;
+    word-break: break-all;
+    white-space: pre-wrap;
+    margin-top:0.5vmin;
+}
+
+.chatMessagesArea{overflow-y: auto;}
+.messageUserAreaText { @include defaultFont($fontSize: 18px, $fontWeight: bolder); }
+
+/* ALL ABOUT THE SETTINGS MENU */
+.settings-panel-container {
+    z-index: 101;
+    justify-content: center;
+    align-items: center;
+    overflow: auto;
+}
+
+.settingsPanelContent {
+    display: flex;
+    width: 50%;
+    height: 70%;
+    background-color: $gray;
+    border: solid #2b2b2e 0.5vmin;
+    box-shadow: 0px 0px 10px rgb(0, 0, 0);
+    border-radius: 20px;
+    flex-direction: column;
+}
+
+.settingsPanelTopBar {
+    display: flex;
+    flex-direction: row;
+    overflow: auto;
+    background-color: #1f1f22;
+    justify-content: space-between;
+    margin: 0.75vmin;
+    padding: 1vmin;
+    border-radius: 18px;
+}
+
+.settingsPanelTopBarEntry {
+    @include defaultFont($fontSize: x-large, $fontWeight: bold);
+    padding: 2vmin;
+    background-color: transparent;
+    border-radius: 25px;
+    border: none;
+    cursor: pointer;
+}
+
+.settingsPanelEntry {
+    display: none;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.userSettingsPanelLabel {
+    @include defaultFont($fontSize: x-large, $fontWeight: bolder);
+    margin: 4vmin;}
+
+.userSettingsPanelNicknameInput {
+    @include defaultFont($fontSize: large, $fontWeight: bolder);
+    background-color: #2b2b2e;
+    border: none;
+    border-radius: 2vmin;
+    align-self: center;
+    padding: 2vmin;
+    width:30%;
+}
+
+.uploadIconLabel {
+    @include defaultFont($fontSize: large, $fontWeight: bolder);
+    cursor: pointer;
+    align-self: center;
+    padding: 2vmin;
+    border-radius: 2vmin;
+    background-color: #2b2b2e;
+}
+
+.popup-container--transparent {
+    display: none;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+}
+
+.popup-container--dark {
+    display: none;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background-color: #14141499;
+}
+
+.uploadIcon { display: none;}
+.flex-row{ display: flex; }
+
+/*weird scrollbar stuff?*/
+::-webkit-scrollbar {width: 10px; }
+::-webkit-scrollbar-track {background: #141414; }
+::-webkit-scrollbar-thumb {border-radius: 1vmin; background: rgb(44, 44, 44);}
+::-webkit-scrollbar-thumb:hover {background: rgb(65, 65, 65);}
