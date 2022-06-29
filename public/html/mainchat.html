@@ -141,7 +141,7 @@
             chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
         }
         function addInstance(instance) {
-            let instanceEntry = newElement('button', 'sidebarElement default-font', 'sidebarElement');
+            let instanceEntry = newElement('button', 'sidebarElement', 'sidebarElement');
             instanceEntry.textContent = instance.properties.name;
             instanceEntry.onclick = function() {
                 socket.emit('Request instance data', instance._id, socket.currentInstanceID);
@@ -149,7 +149,7 @@
             get('sidebarElements').append(instanceEntry);
         }
         function addChannel(channel) {
-            let channelEntry = newElement('button', 'sidebarElement default-font', 'sidebarElement');
+            let channelEntry = newElement('button', 'sidebarElement', 'sidebarElement');
             channelEntry.textContent = channel.properties.name;
             channelEntry.onclick = function() {
                 if(channel._id !== socket.currentChannelID) {
@@ -361,34 +361,34 @@
         <div class="settings-panel-container popup-container--dark" id="settingsPanel">
             <div class="settingsPanelContent" id="settingsPanelContent">
                 <div class="settingsPanelTopBar" id="settingsPanelTopBar">
-                    <button class="settingsPanelTopBarEntry default-font" id="settingsPanelTopBarUserSettings">User Settings</button>
-                    <button class="settingsPanelTopBarEntry default-font" id="settingsPanelTopBarFriends">Friends</button>
-                    <button class="settingsPanelTopBarEntry default-font" id="settingsPanelTopBarUiSettings">UI Settings</button>
+                    <button class="settingsPanelTopBarEntry" id="settingsPanelTopBarUserSettings">User Settings</button>
+                    <button class="settingsPanelTopBarEntry" id="settingsPanelTopBarFriends">Friends</button>
+                    <button class="settingsPanelTopBarEntry" id="settingsPanelTopBarUiSettings">UI Settings</button>
                 </div>
                 <div class="settingsPanelEntry" id="userSettingsPanel">
                     <div class="flex-row">
-                        <div class="userSettingsPanelLabel default-font" id="iconLabel">
+                        <div class="userSettingsPanelLabel" id="iconLabel">
                             Icon
                         </div>
-                        <label for="uploadIcon" class="uploadIconLabel default-font" id="uploadIconLabel">Upload</label>
+                        <label for="uploadIcon" class="userSettingsPanelButton" id="uploadIconLabel">Upload</label>
                         <input class="uploadIcon" type="file" id="uploadIcon" accept="image/*"/>
                     </div>
                     <div class="flex-row">
-                        <label for="nicknameInput" class="userSettingsPanelLabel default-font" id="nicknameLabel">
+                        <label for="nicknameInput" class="userSettingsPanelLabel" id="nicknameLabel">
                             Nickname
                         </label>
-                        <input type="text" class="userSettingsPanelNicknameInput default-font" id="nicknameInput" maxLength="32" spellcheck="false">
+                        <input type="text" class="userSettingsPanelNicknameInput" id="nicknameInput" maxLength="32" spellcheck="false">
                     </div>
                     <div class="flex-row">
-                        <div class="userSettingsPanelLabel default-font" id="colorLabel">
+                        <div class="userSettingsPanelLabel" id="colorLabel">
                             Color
                         </div>
                     </div>
                      <div class="flex-row">
-                        <div class="userSettingsPanelLabel default-font" id="TESTLABEL">
+                        <div class="userSettingsPanelLabel" id="TESTLABEL">
                             TEST_ADD_EMOTE
                         </div>
-                        <label for="uploadEmote" class="uploadIconLabel default-font" id="uploadIconLabel">Upload</label>
+                        <label for="uploadEmote" class="userSettingsPanelButton" id="uploadIconLabel">Upload</label>
                         <input class="uploadIcon" type="file" id="uploadEmote" accept="image/*"/>
                     </div>
                 </div>
