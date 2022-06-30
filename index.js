@@ -182,7 +182,7 @@ async function createEmote(server, socket, userID, instanceID, bytes, type, emot
     }
     const buffer = Buffer.from(bytes);
     const ID = new ObjectId();
-    const path = 'instance-emotes/' + ID + '.' + type;
+    const path = 'instance-emotes/' + ID + '.' + type===('png'||'jpeg')?'png':'gif';
 
     let putParams = {
         Bucket: process.env.S3_BUCKET,

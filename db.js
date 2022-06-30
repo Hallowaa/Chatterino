@@ -125,7 +125,9 @@ export async function getUserAvaliableEmotes(user) {
     let instances = await Instance.find({ 'properties.users': user._id }).populate({ path: 'properties', populate: 'emotes'});
 
     for (const instance of instances) {
-        result.push(instance.properties.emotes);
+        for(const emote of instance.properties.emotes) {
+            result.push(emote);
+        }
     }
     return result;
 }

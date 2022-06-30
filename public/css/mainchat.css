@@ -316,4 +316,14 @@ html, body {
   flex-direction: row;
 }
 
+.emoteImageContainer {
+  align-self: center;
+}
+
+.emoteImage {
+  height: 2em;
+  width: 2em;
+  object-fit: cover;
+}
+
 /*# sourceMappingURL=mainchat.css.map */

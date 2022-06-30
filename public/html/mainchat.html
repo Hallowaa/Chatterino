@@ -46,6 +46,21 @@
             return result;
         }
 
+        function containsFast(array, toSearch) {
+            for(let element of array) {
+                if(element === toSearch) return true;
+            }
+            return false;
+        }
+
+        function count(array, toSearch) {
+            let result = 0;
+            array.forEach(element => {
+                if(element === toSearch) result += 1;
+            });
+            return result;
+        }
+
         function newElement(elementType, elementClass, elementId) {
             let element = document.createElement(elementType);
             element.className = elementClass;
@@ -63,6 +78,67 @@
     </script>
 
     <script type="text/javascript">
+        const emoteRegex = /^<:[a-zA-Z0-9_]+:[a-zA-Z0-9_]{24}@(a|s)>$/;
+        const emoteSuggestionRegex = /^:[a-zA-Z0-9_]*:?$/;
+        const preProcessingEmoteRegex = /^:[a-zA-Z0-9_]+(~[1-9]+)?:$/;
+
+        function matches(message, regex) {
+            for(const part of message.split(' ')) { if(part.match(regex)) return true; }
+            return false;
+        }
+
+        function insertEmoteString(message) {
+            if(matches(message, preProcessingEmoteRegex)) {
+                const availableEmotes = socket.availableEmotes;
+                let result = '';
+
+                for(const part of message.split(' ')) {
+                    if(part === '') {
+                        result += ' ';
+                    } else if(part.match(preProcessingEmoteRegex)) {
+                        const emoteName = part.split(':')[1];
+                        for(const emote of availableEmotes) {
+                            console.log(emote);
+                            if(emote.properties.name === emoteName) {
+                                result += '<:' + emoteName.split('~')[0] + ':' + emote._id + '@' + (emote.properties.content.split('.').pop()==='png'?'s':'a') + '> ';
+                                break;
+                            }
+                        }
+                    } else {
+                        result += part + ' ';
+                    }
+                }
+                return result;
+            }
+            return message;
+        }
+
+        function insertEmoteImage(message) {
+            if(matches(message.textContent, emoteRegex)) {
+                let textContent = message.textContent;
+                message.innerHTML = '';
+                for(const part of textContent.split(' ')) {
+                    if(part === '') {
+                        message.innerHTML += ' ';
+                    } else if(part.match(emoteRegex)) {
+                        const emoteID = part.split(':')[2].split('@')[0];
+                        const fileType = part.split('@')[1].charAt(0)==='s'?'png':'gif';
+                        const emoteContainer = newElement('span', 'emoteImageContainer', 'emoteImageContainer');
+                        const emoteImage = newElement('img', 'emoteImage', 'emoteImage');
+                        emoteImage.src = 'https://chatterinoxd.s3.eu-central-1.amazonaws.com/instance-emotes/' + emoteID + '.' + fileType;
+                        emoteContainer.appendChild(emoteImage);
+                        message.innerHTML += emoteContainer.outerHTML;
+                    } else {
+                        message.innerHTML += part + ' ';
+                    }
+                }
+            }
+        }
+    </script>
+
+
+    <script type="text/javascript">
+
         function addMessage(message) {
             /*
              _________________________
@@ -76,6 +152,7 @@
             const chatMessagesArea = get('chatMessagesArea');
             const messageTextArea = newElement("div", "messageTextArea", "messageTextArea");
             messageTextArea.textContent = message.content.text;
+            insertEmoteImage(messageTextArea);
             if(socket.lastSeenMessage == null || socket.lastSeenMessage.properties.creator._id != message.properties.creator._id) {
                 const messageEntry = newElement("div", "message flex-row", "message");
 
@@ -118,6 +195,7 @@
                 // MESSAGE CONTENT
                 const messageTextArea = newElement("div", "messageTextArea", "messageTextArea");
                 messageTextArea.textContent = message.content.text;
+                insertEmoteImage(messageTextArea);
                 messageUserAndContentContainer.appendChild(messageTextArea);
                 messageEntry.appendChild(messageUserAndContentContainer);
                 chatMessagesArea.appendChild(messageEntry);
@@ -127,6 +205,7 @@
             socket.lastSeenMessage = message;
             chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
         }
+
         function addInstance(instance) {
             let instanceEntry = newElement('button', 'instanceEntry', '');
             let instanceName = newElement('a', '', '');
@@ -144,6 +223,7 @@
             }
             get('instanceList').append(instanceEntry);
         }
+
         function addChannel(channel) {
             let channelEntry = newElement('button', 'sidebarElement', 'sidebarElement');
             channelEntry.textContent = '# ' + channel.properties.name;
@@ -154,6 +234,7 @@
             }
             get('sidebarElements').append(channelEntry);
         }
+
     </script>
 
     <script type="text/javascript">
@@ -164,9 +245,26 @@
 
             socket.on('Respond user data', (user, availableEmotes) => {
                 socket.user = user;
+                socket.availableEmotes = processEmoteNames(availableEmotes);
                 socket.emit('Request instances', user._id);
                 get('nicknameInput').value = socket.user.profile.nickname;
             });
+
+            // TODO: sort entries for faster searching later
+            function processEmoteNames(emotes) {
+                let visited = new Map();
+                let result = [];
+                for(const emote of emotes) {
+                    if(!visited.has(emote.properties.name)) {
+                        visited.set(emote.properties.name, 0);
+                    } else {
+                        visited.set(emote.properties.name, visited.get(emote.properties.name) + 1);
+                        emote.properties.name += '~' + visited.get(emote.properties.name);
+                    }
+                    result.push(emote);
+                }
+                return result;
+            }
 
             socket.on('Respond instances', (instances) => {
                 for(const instance of instances) {
@@ -207,7 +305,6 @@
                 channel.content.messages.forEach(message => {
                     addMessage(message);
                 });
-                
             });
 
             socket.on('Get new message', (channelID, message) => {
@@ -224,12 +321,20 @@
                     e.preventDefault();
                 }
 
+                if(matches(emoteSuggestionRegex)) {
+                    get('emoteSuggestionPanel').style.display = 'flex';
+
+                    // populate emote suggestions panel with emotes that have a similar name to the value of the input field.
+                } else {
+                    get('emoteSuggestionPanel').style.display = 'none';
+                }
+
                 if(e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     if(chatInputField.value.trim().length > 0) {
                         const message = {
                             content: {
-                                text: chatInputField.value
+                                text: insertEmoteString(chatInputField.value)
                             },
                             properties: {
                                 creator: socket.user,

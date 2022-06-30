@@ -270,3 +270,13 @@ html, body {
     align-items: center;
     flex-direction: row;
 }
+
+.emoteImageContainer {
+    align-self: center;
+}
+
+.emoteImage {
+    height: 2em;
+    width: 2em;
+    object-fit: cover;
+}
