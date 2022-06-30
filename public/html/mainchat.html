@@ -75,6 +75,13 @@
         function addZeroFront(value) {
             return (value < 10?'0'+ value:value);
         }
+
+        function checkImage(imageSrc, good, bad) {
+            let img = new Image();
+            img.onload = good; 
+            img.onerror = bad;
+            img.src = imageSrc;
+        }
     </script>
 
     <script type="text/javascript">
@@ -97,13 +104,14 @@
                         result += ' ';
                     } else if(part.match(preProcessingEmoteRegex)) {
                         const emoteName = part.split(':')[1];
+                        console.log(emoteName);
                         for(const emote of availableEmotes) {
-                            console.log(emote);
                             if(emote.properties.name === emoteName) {
                                 result += '<:' + emoteName.split('~')[0] + ':' + emote._id + '@' + (emote.properties.content.split('.').pop()==='png'?'s':'a') + '> ';
                                 break;
                             }
                         }
+                        result += part + ' ';
                     } else {
                         result += part + ' ';
                     }
@@ -125,9 +133,13 @@
                         const fileType = part.split('@')[1].charAt(0)==='s'?'png':'gif';
                         const emoteContainer = newElement('span', 'emoteImageContainer', 'emoteImageContainer');
                         const emoteImage = newElement('img', 'emoteImage', 'emoteImage');
-                        emoteImage.src = 'https://chatterinoxd.s3.eu-central-1.amazonaws.com/instance-emotes/' + emoteID + '.' + fileType;
-                        emoteContainer.appendChild(emoteImage);
-                        message.innerHTML += emoteContainer.outerHTML;
+                        const src = 'https://chatterinoxd.s3.eu-central-1.amazonaws.com/instance-emotes/' + emoteID + '.' + fileType;
+                        checkImage(src, () => { 
+                            emoteImage.src = src;
+                            emoteContainer.appendChild(emoteImage);
+                            message.innerHTML += emoteContainer.outerHTML;
+                        }, () => { message.innerHTML += part + ' ' });
+                        
                     } else {
                         message.innerHTML += part + ' ';
                     }
