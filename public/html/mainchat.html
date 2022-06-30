@@ -321,6 +321,7 @@
                     e.preventDefault();
                 }
 
+                /*
                 if(matches(emoteSuggestionRegex)) {
                     get('emoteSuggestionPanel').style.display = 'flex';
 
@@ -328,7 +329,7 @@
                 } else {
                     get('emoteSuggestionPanel').style.display = 'none';
                 }
-
+                */
                 if(e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     if(chatInputField.value.trim().length > 0) {
