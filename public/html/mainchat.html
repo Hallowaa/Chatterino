@@ -14,6 +14,7 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200&display=swap" rel="stylesheet">
         <script src="/socket.io/socket.io.js"></script>
+        
         <script>
             let socket = io();
             // Reload when pressing back or forward buttons on the browser
@@ -23,131 +24,8 @@
         </script>
     </head>
 
-    <script type="text/javascript">
-        function getCookie(name) {
-            var cookie = document.cookie;
-            var result;
-            cookie.split(' ').forEach(element => {
-                var entry = element.split('=');
-                
-                if(entry[0] == name) {
-                    result = entry[1];
-                }
-            });
-
-            if(result != null) return result;
-        }
-
-        function contains(array, toSearch) {
-            let result = false;
-            array.forEach(element => {
-                if(element == toSearch) result = true;
-            });
-            return result;
-        }
-
-        function containsFast(array, toSearch) {
-            for(let element of array) {
-                if(element === toSearch) return true;
-            }
-            return false;
-        }
-
-        function count(array, toSearch) {
-            let result = 0;
-            array.forEach(element => {
-                if(element === toSearch) result += 1;
-            });
-            return result;
-        }
-
-        function newElement(elementType, elementClass, elementId) {
-            let element = document.createElement(elementType);
-            element.className = elementClass;
-            element.id = elementId;
-            return element;
-        }
-
-        function get(elementId) {
-            return document.getElementById(elementId);
-        }
-
-        function addZeroFront(value) {
-            return (value < 10?'0'+ value:value);
-        }
-
-        function checkImage(imageSrc, good, bad) {
-            let img = new Image();
-            img.onload = good; 
-            img.onerror = bad;
-            img.src = imageSrc;
-        }
-    </script>
-
-    <script type="text/javascript">
-        const emoteRegex = /^<:[a-zA-Z0-9_]+:[a-zA-Z0-9_]{24}@(a|s)>$/;
-        const emoteSuggestionRegex = /^:[a-zA-Z0-9_]*:?$/;
-        const preProcessingEmoteRegex = /^:[a-zA-Z0-9_]+(~[1-9]+)?:$/;
-
-        function matches(message, regex) {
-            for(const part of message.split(' ')) { if(part.match(regex)) return true; }
-            return false;
-        }
-
-        function insertEmoteString(message) {
-            if(matches(message, preProcessingEmoteRegex)) {
-                const availableEmotes = socket.availableEmotes;
-                let result = '';
-
-                for(const part of message.split(' ')) {
-                    if(part === '') {
-                        result += ' ';
-                    } else if(part.match(preProcessingEmoteRegex)) {
-                        const emoteName = part.split(':')[1];
-                        console.log(emoteName);
-                        for(const emote of availableEmotes) {
-                            if(emote.properties.name === emoteName) {
-                                result += '<:' + emoteName.split('~')[0] + ':' + emote._id + '@' + (emote.properties.content.split('.').pop()==='png'?'s':'a') + '> ';
-                                break;
-                            }
-                        }
-                        result += part + ' ';
-                    } else {
-                        result += part + ' ';
-                    }
-                }
-                return result;
-            }
-            return message;
-        }
-
-        function insertEmoteImage(message) {
-            if(matches(message.textContent, emoteRegex)) {
-                let textContent = message.textContent;
-                message.innerHTML = '';
-                for(const part of textContent.split(' ')) {
-                    if(part === '') {
-                        message.innerHTML += ' ';
-                    } else if(part.match(emoteRegex)) {
-                        const emoteID = part.split(':')[2].split('@')[0];
-                        const fileType = part.split('@')[1].charAt(0)==='s'?'png':'gif';
-                        const emoteContainer = newElement('span', 'emoteImageContainer', 'emoteImageContainer');
-                        const emoteImage = newElement('img', 'emoteImage', 'emoteImage');
-                        const src = 'https://chatterinoxd.s3.eu-central-1.amazonaws.com/instance-emotes/' + emoteID + '.' + fileType;
-                        checkImage(src, () => { 
-                            emoteImage.src = src;
-                            emoteContainer.appendChild(emoteImage);
-                            message.innerHTML += emoteContainer.outerHTML;
-                        }, () => { message.innerHTML += part + ' ' });
-                        
-                    } else {
-                        message.innerHTML += part + ' ';
-                    }
-                }
-            }
-        }
-    </script>
-
+    <script src="/js/utils.js"></script>
+    <script src="/js/emote_handler.js"></script>
 
     <script type="text/javascript">
 
@@ -160,7 +38,7 @@
             |       | content         |
             |_______|_________________|
             */
-
+            
             const chatMessagesArea = get('chatMessagesArea');
             const messageTextArea = newElement("div", "messageTextArea", "messageTextArea");
             messageTextArea.textContent = message.content.text;
@@ -215,7 +93,6 @@
                 chatMessagesArea.lastChild.querySelector('#messageUserAndContentContainer').appendChild(messageTextArea);
             }
             socket.lastSeenMessage = message;
-            chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
         }
 
         function addInstance(instance) {
@@ -250,9 +127,12 @@
     </script>
 
     <script type="text/javascript">
+        
+    </script>
+
+    <script type="text/javascript">
         $(document).ready(function() {
             get('chatInputField').style.display='none';
-            
             socket.emit('Request user data', getCookie('token'));
 
             socket.on('Respond user data', (user, availableEmotes) => {
@@ -267,9 +147,8 @@
                 let visited = new Map();
                 let result = [];
                 for(const emote of emotes) {
-                    if(!visited.has(emote.properties.name)) {
-                        visited.set(emote.properties.name, 0);
-                    } else {
+                    if(!visited.has(emote.properties.name)) visited.set(emote.properties.name, 0);
+                    else {
                         visited.set(emote.properties.name, visited.get(emote.properties.name) + 1);
                         emote.properties.name += '~' + visited.get(emote.properties.name);
                     }
@@ -317,11 +196,23 @@
                 channel.content.messages.forEach(message => {
                     addMessage(message);
                 });
+                setTimeout(() => {
+                    get('chatMessagesArea').scrollTop = get('chatMessagesArea').scrollHeight;
+                }, 50);
+                
             });
 
             socket.on('Get new message', (channelID, message) => {
                 if(channelID === socket.currentChannelID) {
+                    let scroll = false;
+                    if(isScrolledToBottom(get('chatMessagesArea'))) {
+                        console.log(isScrolledToBottom(get('chatMessagesArea')));
+                        scroll = true;
+                    }
                     addMessage(message);
+                    if(scroll) {
+                        get('chatMessagesArea').scrollTop = get('chatMessagesArea').scrollHeight;
+                    }
                 }
 
                 // Else make the respective channel entry glow or something idk XD
@@ -461,6 +352,16 @@
                     this.value = '';
                 }
             }
+
+            let loadMessages = false;
+            get('chatMessagesArea').addEventListener('scroll', function(e) {
+                setTimeout(() => {
+                    if($('#chatMessagesArea').scrollTop() < (get('chatMessagesArea').scrollHeight - $('#chatMessagesArea').outerHeight()) / 2 && !loadMessages) {
+                        loadMessages = true;
+                        console.log(loadMessages);
+                    }
+                }, 300);
+            });
         });
 
     </script>
@@ -528,5 +429,6 @@
                 <textarea placeholder="Type your message here..." class="chatInputField" id="chatInputField"></textarea>
             </div>
         </div>
+        
     </body>
 </html>
